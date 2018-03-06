@@ -40,8 +40,3 @@ def get_imgs_and_masks(ids, dir_img, dir_mask):
     masks = to_cropped_imgs(ids, dir_mask, '.png')
 
     return zip(imgs_normalized, masks)
-
-def get_full_img_and_mask(id, dir_img, dir_mask):
-    im = Image.open(dir_img + id + '.png')
-    mask = Image.open(dir_mask + id + '.png')
-    return np.array(im), np.array(mask)
