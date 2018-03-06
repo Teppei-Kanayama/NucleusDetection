@@ -14,11 +14,11 @@ import pdb
 
 COLOR = "color"
 
-def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
+def train_net(net, data, save, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
               cp=True, gpu=False):
-    dir_img = '/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_preprocessed_' + COLOR + '/images/'
-    dir_mask = '/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_preprocessed/masks/'
-    dir_checkpoint = '/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/'
+    dir_img = data + '/images/'
+    dir_mask = data + '/masks/'
+    dir_save = save
 
     ids = get_ids(dir_img)
     ids = split_ids(ids)
@@ -38,9 +38,6 @@ def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
                len(iddataset['val']), str(cp), str(gpu)))
 
     N_train = len(iddataset['train'])
-
-    #train = get_imgs_and_masks(iddataset['train'], dir_img, dir_mask)
-    #val = get_imgs_and_masks(iddataset['val'], dir_img, dir_mask)
 
     optimizer = optim.SGD(net.parameters(),
                           lr=lr, momentum=0.9, weight_decay=0.0005)
@@ -63,11 +60,9 @@ def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
                 X = X.cuda()
                 y = y.cuda()
 
-                X = Variable(X)
-                y = Variable(y)
-            else:
-                X = Variable(X)
-                y = Variable(y)
+
+            X = Variable(X)
+            y = Variable(y)
 
             y_pred = net(X)
             probs = F.sigmoid(y_pred)
@@ -87,7 +82,7 @@ def train_net(net, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
 
         if cp:
             torch.save(net.state_dict(),
-                       dir_checkpoint + COLOR + '_CP{}.pth'.format(epoch+1))
+                       dir_save + 'CP{}.pth'.format(epoch+1))
 
             print('Checkpoint {} saved !'.format(epoch+1))
 
@@ -104,6 +99,12 @@ if __name__ == '__main__':
                       default=False, help='use cuda')
     parser.add_option('-c', '--load', dest='load',
                       default=False, help='load file model')
+    parser.add_option('-d', '--data', dest='data',
+                      default='/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_preprocessed', help='path to training data')
+    parser.add_option('-s', '--save', dest='save',
+                      default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/',
+                      help='path to save models')
+
 
     (options, args) = parser.parse_args()
 
@@ -116,5 +117,5 @@ if __name__ == '__main__':
     if options.gpu:
         net.cuda()
 
-    train_net(net, options.epochs, options.batchsize, options.lr,
+    train_net(net, options.data, options.save, options.epochs, options.batchsize, options.lr,
               gpu=options.gpu)
