@@ -9,16 +9,17 @@ import numpy as np
 from PIL import Image
 from functools import partial
 from .utils import normalize
+import pdb
 
 
 def get_ids(dir):
     """Returns a list of the ids in the directory"""
-    return (f[:-4] for f in os.listdir(dir))
+    return [f.split(".")[0] for f in os.listdir(dir)]
 
 
 def split_ids(ids, n=2):
     """Split each id in n, creating n tuples (id, k) for each id"""
-    return ((id, i) for i in range(n) for id in ids)
+    return [(id, i) for i in range(n) for id in ids]
 
 
 def to_cropped_imgs(ids, dir, suffix):
@@ -31,6 +32,7 @@ def to_cropped_imgs(ids, dir, suffix):
 def get_imgs_and_masks(ids, dir_img, dir_mask):
     """Return all the couples (img, mask)"""
 
+    pdb.set_trace()
     imgs = to_cropped_imgs(ids, dir_img, '.png')
 
     # need to transform from HWC to CHW
