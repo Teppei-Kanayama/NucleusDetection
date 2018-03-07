@@ -21,8 +21,8 @@ if __name__ == "__main__":
                         metavar='FILE',
                         help="Specify the file in which is stored the model"
                         " (default : 'MODEL.pth')")
-    parser.add_argument('--cpu', '-c', action='store_true',
-                        help="Do not use the cuda version of the net",
+    parser.add_argument('--gpu', '-g', action='store_true',
+                        help="Use the cuda version of the net",
                         default=False)
     parser.add_argument('--test_preprocessed', '-tp',
                         help="path to preprocessed test data",
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     #net_gray = UNet(3, 1)
     #net_color = UNet(3, 1)
 
-    if not args.cpu:
+    if args.gpu:
         print("Using CUDA version of the net, prepare your GPU !")
         net.cuda()
         #net_gray.cuda()
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         #    out = predict_img(net_gray, img, in_file, not args.cpu)
         #else: #colorの場合
         #    out = predict_img(net_color, img, in_file, not args.cpu)
-        out = predict_img(net, img, in_file, not args.cpu)
+        out = predict_img(net, img, in_file, args.gpu)
 
         result = Image.fromarray((out * 255).astype(numpy.uint8))
         result = result.resize((original_width, original_height))

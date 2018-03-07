@@ -25,8 +25,9 @@ def predict_img(net, img, fn, gpu=False):
     if gpu:
         X = X.cuda()
 
+    # y_hat = net(X)
+    # return np.asarray((y_hat > 0.5).data) # y_hatは負値もかなり含んでいる
     y = F.sigmoid(net(X))
     y = F.upsample_bilinear(y, scale_factor=2).data[0][0].cpu().numpy()
     yy = dense_crf(np.array(img).astype(np.uint8), y)
-
     return yy > 0.5

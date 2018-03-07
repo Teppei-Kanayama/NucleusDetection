@@ -52,7 +52,7 @@ class Up(nn.Module):
 
         #  would be a nice idea if the upsampling could be learned too,
         #  but my machine do not have enough memory to handle all those weights
-        if bilinear:
+        if bilinear and False:
             #self.up = nn.UpsamplingBilinear2d(scale_factor=2)
             self.up = nn.Upsample(scale_factor=2)
         else:
@@ -84,6 +84,7 @@ class OutConv(nn.Module):
 class UNet(nn.Module):
     def __init__(self, n_channels, n_classes):
         super(UNet, self).__init__()
+        """
         self.inc = InConv(n_channels, 8)
         self.down1 = Down(8, 128)
         self.down2 = Down(128, 256)
@@ -94,6 +95,18 @@ class UNet(nn.Module):
         self.up3 = Up(256, 8)
         self.up4 = Up(16, 16)
         self.outc = OutConv(16, n_classes)
+        """
+        self.inc = InConv(n_channels, 16)
+        self.down1 = Down(16, 32)
+        self.down2 = Down(32, 64)
+        self.down3 = Down(64, 128)
+        self.down4 = Down(128, 256)
+        self.up1 = Up(256, 128)
+        self.up2 = Up(128, 64)
+        self.up3 = Up(64, 32)
+        self.up4 = Up(32, 16)
+        self.outc = OutConv(16, n_classes)
+
 
     def forward(self, x):
         # x.shape == torch.Size([4, 3, 640, 640])
