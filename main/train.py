@@ -20,6 +20,7 @@ def train_net(net, data, save, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
     dir_img = data + 'images/'
     dir_mask = data + 'masks/'
     dir_save = save
+    pdb.set_trace()
     ids = load.get_ids(dir_img)
     ids = load.split_ids(ids)
 
