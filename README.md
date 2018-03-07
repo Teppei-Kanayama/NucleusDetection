@@ -1,14 +1,14 @@
-## train
-```
-$ CUDA_VISIBLE_DEVICES=7 python train.py --gpu True
-```
+## preprocess
+前処理用のプログラム
+- 染色方法の識別
+- エッジ検出
 
-## predict
-```
-$ python predict.py
-```
+## main
+セグメンテーションのための学習を行うプログラム
+- U-Netの学習
 
-## change format to submit
-```
-$ python submit.py
-```
+## postprocess
+学習後の調整用プログラム
+- U-Netを用いた予測
+- くびれの検出・分割
+- 提出形式へのエンコード
