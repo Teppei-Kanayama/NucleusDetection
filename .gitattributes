@@ -1,4 +1,4 @@
-./preprocess/*.ipynb linguist-language
-./main/*.ipynb linguist-language
-./postprocess/*.ipynb linguist-language
-./analyze/*.ipynb linguist-language
+./preprocess/*.ipynb linguist-language=false
+./main/*.ipynb linguist-language=false
+./postprocess/*.ipynb linguist-language=false
+./analyze/*.ipynb linguist-language=false
