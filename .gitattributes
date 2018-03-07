@@ -1,0 +1,4 @@
+./preprocess/*.ipynb linguist-language
+./main/*.ipynb linguist-language
+./postprocess/*.ipynb linguist-language
+./analyze/*.ipynb linguist-language
