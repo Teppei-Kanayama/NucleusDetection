@@ -57,7 +57,11 @@ def train_net(net, data, save, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
         for i, b in enumerate(utils.batch(train, batch_size)):
             X = np.array([i[0] for i in b])[:, :3, :, :] # alpha channelを取り除く
             y = np.array([i[1] for i in b])
-
+            # X.shape == (10, 3, 640, 640)
+            # X.dtype == float64
+            # y.shape == (10, 640, 640)
+            # y.dtype == uint8
+            
             X = torch.FloatTensor(X)
             y = torch.ByteTensor(y)
 
