@@ -15,7 +15,7 @@ import numpy as np
 
 # In[ ]:
 
-img = cv2.imread("sample7.png")
+img = cv2.imread("sample.png")
 #opencvにおいては画像をimreadするとnumpy.ndarray形式で読み込まれる（行（高さ） x 列（幅） x 色（BGR）の三次元）
 #このとき、RGB順でなくBGR順になることに注意
 
@@ -49,7 +49,7 @@ def mono_classification(r):
     
     #jupyter内で元画像を表示するためのやつ
     from IPython.display import Image, display_png
-    display_png(Image("sample7.png"))
+    display_png(Image("sample.png"))
     
     #全体に明るければ背景は白、暗ければ背景は黒
     if average > 126:
@@ -75,7 +75,7 @@ def color_classification(r, g, b):
     
     #jupyter内で元画像を表示するためのやつ
     from IPython.display import Image, display_png
-    display_png(Image("sample7.png"))
+    display_png(Image("sample.png"))
 
     if abs(r_max - b_max) < 10 and abs(b_max - g_max) < 10 and abs(g_max - r_max) < 10:
         print("This picture is type white-purple.")
