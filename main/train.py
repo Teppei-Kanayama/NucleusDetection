@@ -17,13 +17,11 @@ import pdb
 
 def train_net(net, data, save, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
               cp=True, gpu=False):
-    dir_img = data + 'images/'
-    dir_mask = data + 'masks/'
+    #dir_img = data + '_gray/images/'
+    dir_img = data + '/images/'
+    dir_mask = data + '/masks/'
     dir_save = save
-    pdb.set_trace()
     ids = load.get_ids(dir_img)
-    ids = load.split_ids(ids)
-
     # trainとvalに分ける
     iddataset = utils.split_train_val(ids, val_percent)
 
@@ -56,9 +54,8 @@ def train_net(net, data, save, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
         epoch_loss = 0
 
         for i, b in enumerate(utils.batch(train, batch_size)):
-            X = np.array([i[0] for i in b])[:, :3, :, :] # alpha channelを取り除く
-            y = np.array([i[1] for i in b])
-
+            X = np.array([j[0] for j in b])[:, :3, :, :] # alpha channelを取り除く
+            y = np.array([j[1] for j in b])
             X = torch.FloatTensor(X)
             y = torch.ByteTensor(y)
 
@@ -87,7 +84,7 @@ def train_net(net, data, save, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
 
         if cp:
             torch.save(net.state_dict(),
-                       dir_save + 'CP{}.pth'.format(epoch+1))
+                       dir_save + 'gray_CP{}.pth'.format(epoch+1))
 
             print('Checkpoint {} saved !'.format(epoch+1))
 
@@ -105,7 +102,7 @@ if __name__ == '__main__':
     parser.add_option('-c', '--load', dest='load',
                       default=False, help='load file model')
     parser.add_option('-d', '--data', dest='data',
-                      default='/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_preprocessed/', help='path to training data')
+                      default='/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_preprocessed', help='path to training data')
     parser.add_option('-s', '--save', dest='save',
                       default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/',
                       help='path to save models')

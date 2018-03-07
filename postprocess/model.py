@@ -12,7 +12,6 @@ import numpy as np
 import sys
 sys.path.append("../main/")
 from utils import utils
-from utils import dense_crf
 
 def predict_img(net, img, fn, gpu=False):
 
@@ -25,8 +24,7 @@ def predict_img(net, img, fn, gpu=False):
     if gpu:
         X = X.cuda()
 
-    y = F.sigmoid(net(X))
-    y = F.upsample_bilinear(y, scale_factor=2).data[0][0].cpu().numpy()
-    yy = dense_crf(np.array(img).astype(np.uint8), y)
-
-    return yy > 0.5
+    y_hat = F.sigmoid(net(X))
+    y_hat = np.asarray((y_hat > 0.5).data)
+    y_hat = y_hat.reshape((y_hat.shape[2], y_hat.shape[3]))
+    return y_hat
