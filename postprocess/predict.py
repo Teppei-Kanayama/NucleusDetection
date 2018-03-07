@@ -36,25 +36,25 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     print("Using model file : {}".format(args.model))
-    net = UNet(3, 1)
-    #net_gray = UNet(3, 1)
-    #net_color = UNet(3, 1)
+    #net = UNet(3, 1)
+    net_gray = UNet(3, 1)
+    net_color = UNet(3, 1)
 
     if args.gpu:
         print("Using CUDA version of the net, prepare your GPU !")
-        net.cuda()
-        #net_gray.cuda()
-        #net_color.cuda()
+        #net.cuda()
+        net_gray.cuda()
+        net_color.cuda()
     else:
-        net.cpu()
-        #net_gray.cpu()
-        #net_color.cpu()
+        #net.cpu()
+        net_gray.cpu()
+        net_color.cpu()
         print("Using CPU version of the net, this may be very slow")
 
     print("Loading model ...")
-    net.load_state_dict(torch.load(args.model))
-    #net_gray.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/gray_CP50.pth'))
-    #net_color.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/color_CP50.pth'))
+    #net.load_state_dict(torch.load(args.model))
+    net_gray.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/gray_CP50.pth'))
+    net_color.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/color_CP50.pth'))
 
     print("Model loaded !")
 
@@ -71,12 +71,12 @@ if __name__ == "__main__":
         img_array = np.asarray(img)
 
         # color画像かモノクロ画像化によって使うモデルを変える場合
-        #THRESH = 10
-        #if  (img_array[:, :, 1] - img_array[:, :, 2]).sum() ** 2 < THRESH: #grayの場合
-        #    out = predict_img(net_gray, img, in_file, not args.cpu)
-        #else: #colorの場合
-        #    out = predict_img(net_color, img, in_file, not args.cpu)
-        out = predict_img(net, img, in_file, args.gpu)
+        THRESH = 10
+        if  (img_array[:, :, 1] - img_array[:, :, 2]).sum() ** 2 < THRESH: #grayの場合
+            out = predict_img(net_gray, img, in_file, args.gpu)
+        else: #colorの場合
+            out = predict_img(net_color, img, in_file, args.gpu)
+        #out = predict_img(net, img, in_file, args.gpu)
 
         result = Image.fromarray((out * 255).astype(numpy.uint8))
         result = result.resize((original_width, original_height))

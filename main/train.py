@@ -17,8 +17,9 @@ import pdb
 
 def train_net(net, data, save, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
               cp=True, gpu=False):
-    dir_img = data + 'images/'
-    dir_mask = data + 'masks/'
+    #dir_img = data + '_gray/images/'
+    dir_img = data + '/images/'
+    dir_mask = data + '/masks/'
     dir_save = save
     ids = load.get_ids(dir_img)
     # trainとvalに分ける
@@ -83,7 +84,7 @@ def train_net(net, data, save, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
 
         if cp:
             torch.save(net.state_dict(),
-                       dir_save + 'CP{}.pth'.format(epoch+1))
+                       dir_save + 'gray_CP{}.pth'.format(epoch+1))
 
             print('Checkpoint {} saved !'.format(epoch+1))
 
@@ -101,7 +102,7 @@ if __name__ == '__main__':
     parser.add_option('-c', '--load', dest='load',
                       default=False, help='load file model')
     parser.add_option('-d', '--data', dest='data',
-                      default='/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_preprocessed/', help='path to training data')
+                      default='/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_preprocessed', help='path to training data')
     parser.add_option('-s', '--save', dest='save',
                       default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/',
                       help='path to save models')
