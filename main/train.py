@@ -14,11 +14,13 @@ import numpy as np
 import sys
 import os
 import pdb
+from PIL import Image
 
-def train_net(net, data, save, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
-              cp=True, gpu=False):
-    #dir_img = data + '_gray/images/'
-    dir_img = data + '/images/'
+SIZE = (640, 640)
+
+def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=1, lr=0.1, val_percent=0.05, cp=True, gpu=False):
+    dir_img = data + '_color/images/'
+    #dir_img = data + '/images/'
     dir_mask = data + '/masks/'
     dir_save = save
     ids = load.get_ids(dir_img)
@@ -49,10 +51,13 @@ def train_net(net, data, save, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
     # 学習開始
     for epoch in range(epochs):
         print('Starting epoch {}/{}.'.format(epoch+1, epochs))
-        train = load.get_imgs_and_masks(iddataset['train'], dir_img, dir_mask)
-        val = load.get_imgs_and_masks(iddataset['val'], dir_img, dir_mask)
+        train = load.get_imgs_and_masks(iddataset['train'], dir_img, dir_mask, SIZE)
+        original_sizes = load.get_original_sizes(iddataset['val'], dir_img, '.png')
+        val = load.get_imgs_and_masks(iddataset['val'], dir_img, dir_mask, SIZE)
         epoch_loss = 0
+        validation_loss = 0
 
+        # training phase
         for i, b in enumerate(utils.batch(train, batch_size)):
             X = np.array([j[0] for j in b])[:, :3, :, :] # alpha channelを取り除く
             y = np.array([j[1] for j in b])
@@ -82,9 +87,40 @@ def train_net(net, data, save, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
 
         print('Epoch finished ! Loss: {}'.format(epoch_loss/i))
 
+        # validation phase
+
+        for i, b in enumerate(utils.batch(val, val_batch_size)):
+            X = np.array([j[0] for j in b])[:, :3, :, :] # alpha channelを取り除く
+            y = np.array([j[1] for j in b])
+            X = torch.FloatTensor(X)
+            y = torch.ByteTensor(y)
+
+            if gpu:
+                X = X.cuda()
+                y = y.cuda()
+
+            X = Variable(X)
+            y = Variable(y)
+
+            y_pred = net(X)
+            probs = F.sigmoid(y_pred)
+            probs_flat = probs.view(-1)
+            y_flat = y.view(-1)
+            loss = criterion(probs_flat, y_flat.float() / 255.)
+            validation_loss += loss.data[0]
+
+            y_hat = np.asarray((probs > 0.5).data)
+            y_hat = y_hat.reshape((y_hat.shape[2], y_hat.shape[3]))
+            result = Image.fromarray((y_hat * 255).astype(np.uint8))
+            result = result.resize(original_sizes[i])
+            result.save(save_val + iddataset['val'][i] + ".png")
+
+        print('Epoch finished ! Val Loss: {}'.format(validation_loss/i))
+        
+
         if cp:
             torch.save(net.state_dict(),
-                       dir_save + 'gray_CP{}.pth'.format(epoch+1))
+                       dir_save + 'color_CP{}.pth'.format(epoch+1))
 
             print('Checkpoint {} saved !'.format(epoch+1))
 
@@ -93,8 +129,10 @@ if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option('-e', '--epochs', dest='epochs', default=5, type='int',
                       help='number of epochs')
-    parser.add_option('-b', '--batch-size', dest='batchsize', default=10,
+    parser.add_option('-b', '--batchsize', dest='batchsize', default=10,
                       type='int', help='batch size')
+    parser.add_option('-v', '--val_batchsize', dest='val_batchsize', default=1,
+                      type='int', help='validation batch size')
     parser.add_option('-l', '--learning-rate', dest='lr', default=0.1,
                       type='float', help='learning rate')
     parser.add_option('-g', '--gpu', action='store_true', dest='gpu',
@@ -102,9 +140,12 @@ if __name__ == '__main__':
     parser.add_option('-c', '--load', dest='load',
                       default=False, help='load file model')
     parser.add_option('-d', '--data', dest='data',
-                      default='/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_preprocessed', help='path to training data')
+                      default='/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_default', help='path to training data')
     parser.add_option('-s', '--save', dest='save',
                       default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/',
+                      help='path to save models')
+    parser.add_option('--save_val', dest='save_val',
+                      default='/data/unagi0/kanayama/dataset/nuclei_images/answer_val/',
                       help='path to save models')
 
 
@@ -122,5 +163,5 @@ if __name__ == '__main__':
         net.cuda()
 
     #学習を実行
-    train_net(net, options.data, options.save, options.epochs, options.batchsize, options.lr,
+    train_net(net, options.data, options.save, options.save_val, options.epochs, options.batchsize, options.val_batchsize, options.lr,
               gpu=options.gpu)
