@@ -14,6 +14,8 @@ import sys
 sys.path.append("../main/")
 from unet import UNet
 
+from morphology import morphology
+
 SIZE = (640, 640)
 
 if __name__ == "__main__":
@@ -74,7 +76,7 @@ if __name__ == "__main__":
         else: #colorの場合
             out = predict_img(net_color, img, in_file, args.gpu, SIZE)
         #out = predict_img(net, img, in_file, args.gpu)
-
+        out = morphology(out, iterations=1)
         result = Image.fromarray((out * 255).astype(numpy.uint8))
         result = result.resize((original_width, original_height))
         result.save(out_file)
