@@ -22,19 +22,19 @@ def split_ids(ids, n=2):
     return [(id, i) for i in range(n) for id in ids]
 
 
-def to_cropped_imgs(ids, dir, suffix):
-    """From a list of tuples, returns the correct cropped img"""
+def to_resized_imgs(ids, dir, suffix, size):
+    """From a list of tuples, returns the resized img"""
     for id in ids:
         im = Image.open(dir + id + suffix)
+        im = im.resize(size)
         yield np.asarray(im)
 
 
-def get_imgs_and_masks(ids, dir_img, dir_mask):
+def get_imgs_and_masks(ids, dir_img, dir_mask, size):
     """Return all the couples (img, mask)"""
-
-    imgs = to_cropped_imgs(ids, dir_img, '.png')
+    imgs = to_resized_imgs(ids, dir_img, '.png', size)
     # need to transform from HWC to CHW
     imgs_switched = map(partial(np.transpose, axes=[2, 0, 1]), imgs)
     imgs_normalized = map(normalize, imgs_switched)
-    masks = to_cropped_imgs(ids, dir_mask, '.png')
+    masks = to_resized_imgs(ids, dir_mask, '.png', size)
     return zip(imgs_normalized, masks)

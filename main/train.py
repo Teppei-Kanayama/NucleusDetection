@@ -15,6 +15,8 @@ import sys
 import os
 import pdb
 
+SIZE = (640, 640)
+
 def train_net(net, data, save, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
               cp=True, gpu=False):
     #dir_img = data + '_gray/images/'
@@ -49,8 +51,8 @@ def train_net(net, data, save, epochs=5, batch_size=2, lr=0.1, val_percent=0.05,
     # 学習開始
     for epoch in range(epochs):
         print('Starting epoch {}/{}.'.format(epoch+1, epochs))
-        train = load.get_imgs_and_masks(iddataset['train'], dir_img, dir_mask)
-        val = load.get_imgs_and_masks(iddataset['val'], dir_img, dir_mask)
+        train = load.get_imgs_and_masks(iddataset['train'], dir_img, dir_mask, SIZE)
+        val = load.get_imgs_and_masks(iddataset['val'], dir_img, dir_mask, SIZE)
         epoch_loss = 0
 
         for i, b in enumerate(utils.batch(train, batch_size)):
@@ -102,7 +104,7 @@ if __name__ == '__main__':
     parser.add_option('-c', '--load', dest='load',
                       default=False, help='load file model')
     parser.add_option('-d', '--data', dest='data',
-                      default='/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_preprocessed', help='path to training data')
+                      default='/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_default', help='path to training data')
     parser.add_option('-s', '--save', dest='save',
                       default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/',
                       help='path to save models')
