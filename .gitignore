@@ -6,3 +6,7 @@ checkpoints/
 *.jpg
 SUBMISSION*
 submit.csv
+*.ipynb
+.ipynb_checkpoints
+*/.ipynb_checkpoints
+*/.DS_Store

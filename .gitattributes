@@ -1,0 +1,3 @@
+./preprocess/* linguist-language=false
+./postprocess/* linguist-language=false
+./analyze/* linguist-language=false
