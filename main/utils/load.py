@@ -24,11 +24,19 @@ def split_ids(ids, n=2):
 
 def to_resized_imgs(ids, dir, suffix, size):
     """From a list of tuples, returns the resized img"""
+    original_sizes = []
     for id in ids:
         im = Image.open(dir + id + suffix)
-        im = im.resize(size)
+        original_sizes.append(im.size)
+        im = im.resize(size) #ここでリサイズする
         yield np.asarray(im)
 
+def get_original_sizes(ids, dir, suffix):
+    original_sizes = []
+    for id in ids:
+        im = Image.open(dir + id + suffix)
+        original_sizes.append(im.size)
+    return original_sizes
 
 def get_imgs_and_masks(ids, dir_img, dir_mask, size):
     """Return all the couples (img, mask)"""
