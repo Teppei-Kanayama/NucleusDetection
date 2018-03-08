@@ -14,6 +14,8 @@ import sys
 sys.path.append("../main/")
 from unet import UNet
 
+SIZE = (640, 640)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m',
@@ -24,11 +26,8 @@ if __name__ == "__main__":
     parser.add_argument('--gpu', '-g', action='store_true',
                         help="Use the cuda version of the net",
                         default=False)
-    parser.add_argument('--test_preprocessed', '-tp',
-                        help="path to preprocessed test data",
-                        default="/data/unagi0/kanayama/dataset/nuclei_images/stage1_test_preprocessed/images/")
-    parser.add_argument('--test_original', '-to',
-                        help="path to preprocessed test data",
+    parser.add_argument('--test', '-t',
+                        help="path to test data",
                         default="/data/unagi0/kanayama/dataset/nuclei_images/stage1_test/")
     parser.add_argument('--save', '-s',
                         help="path to save directory for output masks",
@@ -58,28 +57,25 @@ if __name__ == "__main__":
 
     print("Model loaded !")
 
-    for file_name in os.listdir(args.test_preprocessed):
-        in_file = args.test_preprocessed + file_name
-        out_file = args.save + file_name
-
-        original_img = Image.open(args.test_original + file_name.split(".")[0] + "/images/" + file_name)
-        original_width = original_img.size[0]
-        original_height =  original_img.size[1]
+    for file_name in os.listdir(args.test):
+        in_file = args.test + file_name + "/images/" + file_name + ".png"
+        out_file = args.save + file_name + ".png"
 
         print("\nPredicting image {} ...".format(in_file))
         img = Image.open(in_file)
+        original_width = img.size[0]
+        original_height =  img.size[1]
         img_array = np.asarray(img)
 
         # color画像かモノクロ画像化によって使うモデルを変える場合
         THRESH = 10
         if  (img_array[:, :, 1] - img_array[:, :, 2]).sum() ** 2 < THRESH: #grayの場合
-            out = predict_img(net_gray, img, in_file, args.gpu)
+            out = predict_img(net_gray, img, in_file, args.gpu, SIZE)
         else: #colorの場合
-            out = predict_img(net_color, img, in_file, args.gpu)
+            out = predict_img(net_color, img, in_file, args.gpu, SIZE)
         #out = predict_img(net, img, in_file, args.gpu)
 
         result = Image.fromarray((out * 255).astype(numpy.uint8))
         result = result.resize((original_width, original_height))
-
         result.save(out_file)
         print("Mask saved to {}".format(out_file))

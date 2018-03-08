@@ -13,8 +13,8 @@ import sys
 sys.path.append("../main/")
 from utils import utils
 
-def predict_img(net, img, fn, gpu=False):
-
+def predict_img(net, img, fn, gpu, size):
+    img = img.resize(size)
     img = np.array(img)
     img = img[:, :, :3] # alphachannelを削除
     img = utils.normalize(img)
