@@ -18,10 +18,9 @@ from PIL import Image
 
 SIZE = (640, 640)
 
-def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=1, lr=0.1, val_percent=0.05,
-              cp=True, gpu=False):
-    #dir_img = data + '_gray/images/'
-    dir_img = data + '/images/'
+def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=1, lr=0.1, val_percent=0.05, cp=True, gpu=False):
+    dir_img = data + '_color/images/'
+    #dir_img = data + '/images/'
     dir_mask = data + '/masks/'
     dir_save = save
     ids = load.get_ids(dir_img)
@@ -89,6 +88,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
         print('Epoch finished ! Loss: {}'.format(epoch_loss/i))
 
         # validation phase
+
         for i, b in enumerate(utils.batch(val, val_batch_size)):
             X = np.array([j[0] for j in b])[:, :3, :, :] # alpha channelを取り除く
             y = np.array([j[1] for j in b])
@@ -116,11 +116,11 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             result.save(save_val + iddataset['val'][i] + ".png")
 
         print('Epoch finished ! Val Loss: {}'.format(validation_loss/i))
-
+        
 
         if cp:
             torch.save(net.state_dict(),
-                       dir_save + 'gray_CP{}.pth'.format(epoch+1))
+                       dir_save + 'color_CP{}.pth'.format(epoch+1))
 
             print('Checkpoint {} saved !'.format(epoch+1))
 
