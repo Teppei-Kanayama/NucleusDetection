@@ -11,8 +11,11 @@ import numpy as np
 
 from model import predict_img
 import sys
+from Otsu import OTSU
 sys.path.append("../main/")
 from unet import UNet
+sys.path.append("../preprocess")
+from imagetype_classification import imagetype_classification
 
 from morphology import morphology
 
@@ -55,7 +58,7 @@ if __name__ == "__main__":
     print("Loading model ...")
     #net.load_state_dict(torch.load(args.model))
     net_gray.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/gray_CP100.pth'))
-    net_color.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/color_CP100.pth'))
+    net_color.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/color_CP200.pth'))
 
     print("Model loaded !")
 
@@ -69,15 +72,27 @@ if __name__ == "__main__":
         original_height =  img.size[1]
         img_array = np.asarray(img)
 
-        # color画像かモノクロ画像化によって使うモデルを変える場合
-        THRESH = 10
-        if  (img_array[:, :, 1] - img_array[:, :, 2]).sum() ** 2 < THRESH: #grayの場合
-            out = predict_img(net_gray, img, in_file, args.gpu, SIZE)
-        else: #colorの場合
-            out = predict_img(net_color, img, in_file, args.gpu, SIZE)
+        # 全て統一的に扱う場合
         #out = predict_img(net, img, in_file, args.gpu)
-        out = morphology(out, iterations=2)
-        result = Image.fromarray((out * 255).astype(numpy.uint8))
-        result = result.resize((original_width, original_height))
+
+        # 染色方法ごとに処理を分ける
+        image_type = imagetype_classification(in_file)
+        print(image_type)
+        if False and (image_type == 3 or image_type == 4):
+            otsu = OTSU(in_file)
+            out = otsu.data().astype(np.uint8)
+            out = morphology(out, iterations=2)
+            result = Image.fromarray(out)
+        elif (image_type == 1 or image_type == 2):  # 白黒
+            out = predict_img(net_gray, img, in_file, args.gpu, SIZE)
+            out = morphology(out, iterations=2)
+            result = Image.fromarray((out * 255).astype(numpy.uint8))
+            result = result.resize((original_width, original_height))
+        else:
+            out = predict_img(net_color, img, in_file, args.gpu, SIZE)
+            out = morphology(out, iterations=2)
+            result = Image.fromarray((out * 255).astype(numpy.uint8))
+            result = result.resize((original_width, original_height))
+
         result.save(out_file)
         print("Mask saved to {}".format(out_file))
