@@ -1,8 +1,4 @@
-
 # coding: utf-8
-
-# In[19]:
-
 
 import cv2
 import matplotlib.pyplot as plt
@@ -16,5 +12,5 @@ class OTSU:
         plt.gray()
         plt.show()
     def data(self):
-        return self.__data
+        return (255. - self.__data)  # 白黒反転
 
