@@ -3,9 +3,8 @@ import matplotlib.pyplot as plt
 #edge検出を行うクラス
 class edgeDetect:
     __edge_img = 0
-    def __init__(self,file_name):
-        org_img = cv2.imread(file_name, cv2.IMREAD_UNCHANGED)
-        gray_img = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
+    def __init__(self,org_img):#元画像はカラー
+        gray_img = cv2.cvtColor(org_img, cv2.COLOR_RGB2GRAY)
         lap= cv2.Laplacian(gray_img,cv2.CV_64F)
         self.__edge_img = cv2.convertScaleAbs(lap)
     def show(self):#表示
