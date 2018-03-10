@@ -11,7 +11,7 @@ import numpy as np
 
 from model import predict_img
 import sys
-from Otsu import OTSU
+from Otsu import Otsu
 sys.path.append("../main/")
 from unet import UNet
 sys.path.append("../preprocess")
@@ -61,8 +61,8 @@ if __name__ == "__main__":
     print("Loading model ...")
     #net.load_state_dict(torch.load(args.model))
     net_gray.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/gray_CP100.pth'))
-    net_color.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/color_CP100.pth'))
-    net_2.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/2-CP50.pth'))
+    net_color.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/color_CP50.pth'))
+    net_2.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/2-CP100.pth'))
 
     print("Model loaded !")
 
@@ -86,10 +86,12 @@ if __name__ == "__main__":
             result = result.resize((original_width, original_height))
         elif image_type == 2:
             out = predict_img(net_2, img, in_file, args.gpu, SIZE)
+            out = morphology(out, iterations=1)
             result = Image.fromarray((out * 255).astype(numpy.uint8))
             result = result.resize((original_width, original_height))
         else:
             out = predict_img(net_color, img, in_file, args.gpu, SIZE)
+            out = morphology(out, iterations=1)
             result = Image.fromarray((out * 255).astype(numpy.uint8))
             result = result.resize((original_width, original_height))
 
