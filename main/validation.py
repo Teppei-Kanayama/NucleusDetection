@@ -1,4 +1,3 @@
-from cv2 import *
 import numpy as np
 from skimage import morphology
 
