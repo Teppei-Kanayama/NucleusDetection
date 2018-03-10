@@ -38,11 +38,12 @@ def get_original_sizes(ids, dir, suffix):
         original_sizes.append(im.size)
     return original_sizes
 
-def get_imgs_and_masks(ids, dir_img, dir_mask, size):
+def get_imgs_and_masks(ids, dir_img, dir_mask, dir_edge, size):
     """Return all the couples (img, mask)"""
     imgs = to_resized_imgs(ids, dir_img, '.png', size)
     # need to transform from HWC to CHW
     imgs_switched = map(partial(np.transpose, axes=[2, 0, 1]), imgs)
     imgs_normalized = map(normalize, imgs_switched)
     masks = to_resized_imgs(ids, dir_mask, '.png', size)
-    return zip(imgs_normalized, masks)
+    edges = to_resized_imgs(ids, dir_edge, '.png', size)
+    return zip(imgs_normalized, masks, edges)

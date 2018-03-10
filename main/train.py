@@ -16,12 +16,15 @@ import os
 import pdb
 from PIL import Image
 
+from myloss import weighted_binary_cross_entropy
+
 SIZE = (640, 640)
 
 def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=1, lr=0.1, val_percent=0.05, cp=True, gpu=False):
-    dir_img = data + '_color/images/'
-    #dir_img = data + '/images/'
+    dir_img = data + '/images/'
+    #dir_img = data + '_gray/images/'
     dir_mask = data + '/masks/'
+    dir_edge = data + '/edges/'
     dir_save = save
     ids = load.get_ids(dir_img)
     # trainとvalに分ける
@@ -45,15 +48,13 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
     # 最適化手法を定義
     optimizer = optim.SGD(net.parameters(),
                           lr=lr, momentum=0.9, weight_decay=0.0005)
-    # 損失関数を定義
     criterion = nn.BCELoss()
-
     # 学習開始
     for epoch in range(epochs):
         print('Starting epoch {}/{}.'.format(epoch+1, epochs))
-        train = load.get_imgs_and_masks(iddataset['train'], dir_img, dir_mask, SIZE)
+        train = load.get_imgs_and_masks(iddataset['train'], dir_img, dir_mask, dir_edge, SIZE)
         original_sizes = load.get_original_sizes(iddataset['val'], dir_img, '.png')
-        val = load.get_imgs_and_masks(iddataset['val'], dir_img, dir_mask, SIZE)
+        val = load.get_imgs_and_masks(iddataset['val'], dir_img, dir_mask, dir_edge, SIZE)
         epoch_loss = 0
         validation_loss = 0
 
@@ -61,21 +62,28 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
         for i, b in enumerate(utils.batch(train, batch_size)):
             X = np.array([j[0] for j in b])[:, :3, :, :] # alpha channelを取り除く
             y = np.array([j[1] for j in b])
+            w = np.array([j[2] for j in b])
+
             X = torch.FloatTensor(X)
             y = torch.ByteTensor(y)
+            w = torch.ByteTensor(w)
 
             if gpu:
                 X = X.cuda()
                 y = y.cuda()
+                w = w.cuda()
 
             X = Variable(X)
             y = Variable(y)
+            w = Variable(w)
 
             y_pred = net(X)
             probs = F.sigmoid(y_pred)
             probs_flat = probs.view(-1)
             y_flat = y.view(-1)
-            loss = criterion(probs_flat, y_flat.float() / 255.)
+            w_flat = w.view(-1)
+            weight = (w_flat.float() / 255.) * 9. + 1.
+            loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
             epoch_loss += loss.data[0]
 
             print('{0:.4f} --- loss: {1:.6f}'.format(i*batch_size/N_train,
@@ -86,27 +94,32 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             optimizer.step()
 
         print('Epoch finished ! Loss: {}'.format(epoch_loss/i))
-
         # validation phase
 
         for i, b in enumerate(utils.batch(val, val_batch_size)):
             X = np.array([j[0] for j in b])[:, :3, :, :] # alpha channelを取り除く
             y = np.array([j[1] for j in b])
+            w = np.array([j[2] for j in b])
             X = torch.FloatTensor(X)
             y = torch.ByteTensor(y)
+            w = torch.ByteTensor(w)
 
             if gpu:
                 X = X.cuda()
                 y = y.cuda()
+                w = w.cuda()
 
-            X = Variable(X)
-            y = Variable(y)
+            X = Variable(X, volatile=True)
+            y = Variable(y, volatile=True)
+            w = Variable(w, volatile=True)
 
             y_pred = net(X)
             probs = F.sigmoid(y_pred)
             probs_flat = probs.view(-1)
             y_flat = y.view(-1)
-            loss = criterion(probs_flat, y_flat.float() / 255.)
+            w_flat = w.view(-1)
+            weight = (w_flat.float() / 255.) * 9. + 1.
+            loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
             validation_loss += loss.data[0]
 
             y_hat = np.asarray((probs > 0.5).data)
@@ -116,11 +129,11 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             result.save(save_val + iddataset['val'][i] + ".png")
 
         print('Epoch finished ! Val Loss: {}'.format(validation_loss/i))
-        
+
 
         if cp:
             torch.save(net.state_dict(),
-                       dir_save + 'color_CP{}.pth'.format(epoch+1))
+                       dir_save + 'CP{}.pth'.format(epoch+1))
 
             print('Checkpoint {} saved !'.format(epoch+1))
 
