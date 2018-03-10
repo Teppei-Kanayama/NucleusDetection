@@ -1,20 +1,17 @@
-
 # coding: utf-8
-
-# In[25]:
-
 
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-DIFF_LIMIT = 0.15#輪郭面積と凸包面積の差の限界値。要調整
+DIFF_LIMIT = 0.15  # 輪郭面積と凸包面積の差の限界値。要調整
 class CurveDetect:
     __data = 0
     __contours = 0
     __concaves = []
     __rects = []
     def __init__(self, data):
-        mask = cv2.cvtColor(data, cv2.COLOR_RGB2GRAY)#RGBで入ってきた時の保険。グレースケールで入ってくることが保証できるなら不要
+        #mask = cv2.cvtColor(data, cv2.COLOR_RGB2GRAY)#RGBで入ってきた時の保険。グレースケールで入ってくることが保証できるなら不要
+        mask = data
         self.__data = data#元のマスクを格納する
         image, self.__contours, hierarchy = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
         for contour in self.__contours:
@@ -37,11 +34,7 @@ class CurveDetect:
     def data(self):
         return self.__concaves
 
-
-# In[26]:
-
-
-d = cv2.imread("test.png")
-cu = CurveDetect(d)
-cu.show()
-
+if __name__ == "__main__":
+    d = cv2.imread("test.png")
+    cu = CurveDetect(d)
+    cu.show()
