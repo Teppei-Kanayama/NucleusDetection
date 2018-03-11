@@ -26,9 +26,9 @@ from validation import validate
 SIZE = (640, 640)
 
 def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=1, lr=0.1, val_percent=0.05, cp=True, gpu=False, calc_score=True):
-    #dir_img = data + '2/images/'
+    dir_img = data + '2/images/'
     #dir_img = data + '_gray/images/'
-    dir_img = data + '_color/images/'
+    #dir_img = data + '_color/images/'
     dir_mask = data + '/masks/'
     dir_edge = data + '/edges/'
     dir_save = save
@@ -164,7 +164,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
 
         if cp:
             torch.save(net.state_dict(),
-                       dir_save + 'color_CP{}.pth'.format(epoch+1))
+                       dir_save + '2-CP{}.pth'.format(epoch+1))
 
             print('Checkpoint {} saved !'.format(epoch+1))
 
@@ -181,8 +181,9 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
 
         # draw score graph
         if calc_score:
-            plt.plot(epoch_arange, validation_score_list, label="Mean", linewidth=5)
+            plt.plot(epoch_arange, validation_score_list, label="Mean", linewidth=4)
             threshold = np.linspace(0.5, 0.95, 10)
+            threshold = np.around(threshold, decimals=2)
             for i, thresh in enumerate(threshold):
                 plt.plot(epoch_arange, validation_score_matrix[:epoch+1, i], label=str(thresh))
 

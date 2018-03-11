@@ -22,7 +22,7 @@ def validate(answer, truth):
 
     # thresholds
     threshold = np.linspace(0.5, 0.95, 10)
-    threshold = np.around(threshold, decimals=2)
+    
 
     # create IoU table
     for i in range(answer_num):
