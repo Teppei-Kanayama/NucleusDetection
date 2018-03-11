@@ -26,9 +26,9 @@ from validation import validate
 SIZE = (640, 640)
 
 def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=1, lr=0.1, val_percent=0.05, cp=True, gpu=False, calc_score=True):
-    #dir_img = data + '2/images/'
+    dir_img = data + '2/images/'
     #dir_img = data + '_gray/images/'
-    dir_img = data + '_color/images/'
+    #dir_img = data + '_color/images/'
     dir_mask = data + '/masks/'
     dir_edge = data + '/edges/'
     dir_save = save
@@ -146,7 +146,8 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             y_truth = np.asarray(y.data)
 
             # calculate validatation score
-            if calc_score and epoch > -1:  # 初期はノイズが多くスコアリングに時間がかかるため
+            if calc_score and epoch > 10:  # 初期はノイズが多くスコアリングに時間がかかるため
+                print("Image No.", i, "started.")
                 score, scores, _ = validate(y_hat, y_truth)
                 validation_score += score
                 validation_scores += scores
