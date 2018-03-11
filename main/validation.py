@@ -21,7 +21,8 @@ def validate(answer, truth):
     IoU_table = np.empty((0,truth_num), float)
 
     # thresholds
-    threshold = np.array([0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95])
+    threshold = np.linspace(0.5, 0.95, 10)
+    threshold = np.around(threshold, decimals=2)
 
     # create IoU table
     for i in range(answer_num):
