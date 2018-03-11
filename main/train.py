@@ -98,7 +98,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             probs_flat = probs.view(-1)
             y_flat = y.view(-1)
             w_flat = w.view(-1)
-            weight = (w_flat.float() / 255.) * 9. + 1.
+            weight = (w_flat.float() / 255.) * 4. + 1.
             loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
             train_loss += loss.data[0]
 
@@ -146,7 +146,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             y_truth = np.asarray(y.data)
 
             # calculate validatation score
-            if calc_score and epoch > 10:  # 初期はノイズが多くスコアリングに時間がかかるため
+            if calc_score and False:  # 初期はノイズが多くスコアリングに時間がかかるため
                 print("Image No.", i, "started.")
                 score, scores, _ = validate(y_hat, y_truth)
                 validation_score += score
