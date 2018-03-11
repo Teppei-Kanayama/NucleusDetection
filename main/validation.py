@@ -43,5 +43,4 @@ def validate(answer, truth):
 
     # calculate overall validation
     validation = np.mean(validations)
-    print(validation, validations)
     return validation, validations, IoU_table
