@@ -26,9 +26,9 @@ from validation import validate
 SIZE = (640, 640)
 
 def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=1, lr=0.1, val_percent=0.05, cp=True, gpu=False, calc_score=True):
-    dir_img = data + '2/images/'
+    #dir_img = data + '2/images/'
     #dir_img = data + '_gray/images/'
-    #dir_img = data + '_color/images/'
+    dir_img = data + '_color/images/'
     dir_mask = data + '/masks/'
     dir_edge = data + '/edges/'
     dir_save = save
@@ -77,6 +77,8 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             X = np.array([j[0] for j in b])[:, :3, :, :] # alpha channelを取り除く
             y = np.array([j[1] for j in b])
             w = np.array([j[2] for j in b])
+
+            X, y, w = utils.data_augmentation(X, y, w)
 
             X = torch.FloatTensor(X)
             y = torch.ByteTensor(y)
@@ -135,7 +137,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             w_flat = w.view(-1)
 
             # edgeに対して重み付けをする
-            weight = (w_flat.float() / 255.) * 9. + 1.
+            weight = (w_flat.float() / 255.) * 4. + 1.
             loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
             validation_loss += loss.data[0]
 
@@ -144,7 +146,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             y_truth = np.asarray(y.data)
 
             # calculate validatation score
-            if calc_score:
+            if calc_score and epoch > -1:  # 初期はノイズが多くスコアリングに時間がかかるため
                 score, scores, _ = validate(y_hat, y_truth)
                 validation_score += score
                 validation_scores += scores
@@ -161,6 +163,8 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             print('score: {}'.format(validation_score / i))
             validation_score_matrix[epoch] = validation_scores / i
             validation_score_list.append(validation_score / i)
+        else:
+            validation_score_list.append(0.0)
 
         if cp:
             torch.save(net.state_dict(),

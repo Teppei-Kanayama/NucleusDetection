@@ -22,12 +22,14 @@ def validate(answer, truth):
 
     # thresholds
     threshold = np.linspace(0.5, 0.95, 10)
-    
+
 
     # create IoU table
     for i in range(answer_num):
         IoU_line = np.array([])
+        IoU_line = []
         for j in range(truth_num):
+            import pdb; pdb.set_trace()
             label = answer_individual[i] + truth_individual[j]
             IoU = len(np.where(label==2)[0]) / len(np.where(label>=1)[0])
             IoU_line = np.append(IoU_line, IoU)
