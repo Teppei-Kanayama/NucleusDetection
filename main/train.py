@@ -28,7 +28,7 @@ SIZE = (640, 640)
 def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=1, lr=0.1, val_percent=0.05, cp=True, gpu=False, calc_score=True):
     #dir_img = data + '2/images/'
     #dir_img = data + '_gray/images/'
-    dir_img = data + '_color/images/'
+    dir_img = data + '_gray/images/'
     dir_mask = data + '/masks/'
     dir_edge = data + '/edges/'
     dir_save = save
@@ -50,7 +50,8 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
 
     N_train = len(iddataset['train'])
     N_val = len(iddataset['val'])
-
+    N_batch_per_epoch_train = int(N_train / batch_size)
+    N_batch_per_epoch_val = int(N_val / val_batch_size)
     # 最適化手法を定義
     optimizer = optim.SGD(net.parameters(),
                           lr=lr, momentum=0.9, weight_decay=0.0005)
@@ -101,7 +102,10 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             y_flat = y.view(-1)
             w_flat = w.view(-1)
             weight = (w_flat.float() / 255.) * 4. + 1.
+            #weight = (w_flat.float() / 255.) * 0. + 1.
             loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
+            #loss2 = criterion(probs_flat, y_flat.float() / 255.)
+            #print(np.isclose(loss.data[0], loss2.data[0]))
             train_loss += loss.data[0]
 
             print('{0:.4f} --- loss: {1:.6f}'.format(i*batch_size/N_train,
@@ -111,8 +115,8 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             loss.backward()
             optimizer.step()
 
-        print('Epoch finished ! Loss: {}'.format(train_loss/i))
-        train_loss_list.append(train_loss/i)
+        print('Epoch finished ! Loss: {}'.format(train_loss/N_batch_per_epoch_train))
+        train_loss_list.append(train_loss/N_batch_per_epoch_train)
 
         # validation phase
         for i, b in enumerate(utils.batch(val, val_batch_size)):
@@ -140,7 +144,10 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
 
             # edgeに対して重み付けをする
             weight = (w_flat.float() / 255.) * 4. + 1.
+            #weight = (w_flat.float() / 255.) * 0. + 1.
             loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
+            #loss2 = criterion(probs_flat, y_flat.float() / 255.)
+            #print(np.isclose(loss.data[0], loss2.data[0]))
             validation_loss += loss.data[0]
 
             y_hat = np.asarray((probs > 0.5).data)
@@ -159,8 +166,8 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             result = result.resize(original_sizes[i])
             result.save(save_val + iddataset['val'][i] + ".png")
 
-        print('Val Loss: {}'.format(validation_loss / i))
-        validation_loss_list.append(validation_loss / i)
+        print('Val Loss: {}'.format(validation_loss / N_batch_per_epoch_val))
+        validation_loss_list.append(validation_loss / N_batch_per_epoch_val)
 
         if calc_score:
             print('score: {}'.format(validation_score / i))
@@ -171,7 +178,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
 
         if cp and (epoch + 1) % 10 == 0:
             torch.save(net.state_dict(),
-                       dir_save + 'color_CP{}.pth'.format(epoch+1))
+                       dir_save + 'gray3_CP{}.pth'.format(epoch+1))
 
             print('Checkpoint {} saved !'.format(epoch+1))
 
@@ -207,7 +214,7 @@ if __name__ == '__main__':
                       help='number of epochs')
     parser.add_option('-b', '--batchsize', dest='batchsize', default=10,
                       type='int', help='batch size')
-    parser.add_option('-v', '--val_batchsize', dest='val_batchsize', default=1,
+    parser.add_option('-v', '--val_batch_size', dest='val_batch_size', default=1,
                       type='int', help='validation batch size')
     parser.add_option('-l', '--learning-rate', dest='lr', default=0.1,
                       type='float', help='learning rate')
@@ -241,5 +248,5 @@ if __name__ == '__main__':
         net.cuda()
 
     #学習を実行
-    train_net(net, options.data, options.save, options.save_val, options.epochs, options.batchsize, options.val_batchsize, options.lr,
+    train_net(net, options.data, options.save, options.save_val, options.epochs, options.batchsize, options.val_batch_size, options.lr,
               gpu=options.gpu, calc_score=options.calc_score)

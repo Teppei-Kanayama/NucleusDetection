@@ -13,9 +13,11 @@ class DoubleConv(nn.Module):
             nn.Conv2d(in_ch, out_ch, 3, padding=1),
             nn.BatchNorm2d(out_ch),
             nn.ReLU(inplace=True),
+            #nn.Dropout(0.1),
             nn.Conv2d(out_ch, out_ch, 3, padding=1),
             nn.BatchNorm2d(out_ch),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
+            #nn.Dropout(0.1)
         )
 
     def forward(self, x):
