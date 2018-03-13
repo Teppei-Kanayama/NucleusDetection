@@ -24,7 +24,7 @@ SIZE = (640, 640)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m',
-                        default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/4_CP250.pth',
+                        default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/5_CP300.pth',
                         metavar='FILE',
                         help="Specify the file in which is stored the model"
                         " (default : 'MODEL.pth')")
@@ -57,8 +57,8 @@ if __name__ == "__main__":
 
     print("Loading model ...")
     net.load_state_dict(torch.load(args.model))
-    net_gray.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/gray4_CP150.pth'))
-    net_color.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/color4_CP300.pth'))
+    #net_gray.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/gray4_CP150.pth'))
+    #net_color.load_state_dict(torch.load('/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/color4_CP300.pth'))
 
     print("Model loaded !")
 

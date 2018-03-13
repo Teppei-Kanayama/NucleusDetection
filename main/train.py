@@ -104,8 +104,8 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             w_flat = w.view(-1)
             weight = (w_flat.float() / 255.) * 4. + 1.
             #weight = (w_flat.float() / 255.) * 0. + 1.
-            #loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
-            loss = criterion(probs_flat, y_flat.float() / 255.)
+            loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
+            #loss = criterion(probs_flat, y_flat.float() / 255.)
             #print(np.isclose(loss.data[0], loss2.data[0]))
             train_loss += loss.data[0]
 
@@ -147,8 +147,8 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             # edgeに対して重み付けをする
             weight = (w_flat.float() / 255.) * 4. + 1.
             #weight = (w_flat.float() / 255.) * 0. + 1.
-            #loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
-            loss = criterion(probs_flat, y_flat.float() / 255.)
+            loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
+            #loss = criterion(probs_flat, y_flat.float() / 255.)
             #print(np.isclose(loss.data[0], loss2.data[0]))
             validation_loss += loss.data[0]
 
@@ -180,7 +180,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
 
         if cp and (epoch + 1) % 10 == 0:
             torch.save(net.state_dict(),
-                       dir_save + '4_CP{}.pth'.format(epoch+1))
+                       dir_save + '5_CP{}.pth'.format(epoch+1))
 
             print('Checkpoint {} saved !'.format(epoch+1))
 
@@ -192,7 +192,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
         plt.title("Mean WBCELoss")
         plt.xlabel("epochs")
         plt.ylabel("loss")
-        plt.savefig("./results/loss4.png")
+        plt.savefig("./results/loss5.png")
         plt.clf()
 
         # draw score graph
