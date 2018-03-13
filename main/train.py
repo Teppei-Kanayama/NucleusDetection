@@ -26,9 +26,9 @@ from validation import validate
 SIZE = (640, 640)
 
 def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=1, lr=0.1, val_percent=0.05, cp=True, gpu=False, calc_score=True):
-    #dir_img = data + '2/images/'
+    dir_img = data + '/images/'
     #dir_img = data + '_gray/images/'
-    dir_img = data + '_gray/images/'
+    #dir_img = data + '_color/images/'
     dir_mask = data + '/masks/'
     dir_edge = data + '/edges/'
     dir_save = save
@@ -53,8 +53,9 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
     N_batch_per_epoch_train = int(N_train / batch_size)
     N_batch_per_epoch_val = int(N_val / val_batch_size)
     # 最適化手法を定義
-    optimizer = optim.SGD(net.parameters(),
-                          lr=lr, momentum=0.9, weight_decay=0.0005)
+    #optimizer = optim.SGD(net.parameters(),
+    #                      lr=lr, momentum=0.9, weight_decay=0.0005)
+    optimizer = optim.Adam(net.parameters())
     criterion = nn.BCELoss()
 
     # 学習開始
@@ -62,6 +63,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
     validation_loss_list = []
     validation_score_matrix = np.zeros((epochs, 10))
     validation_score_list = []
+
 
     for epoch in range(epochs):
         print('Starting epoch {}/{}.'.format(epoch+1, epochs))
@@ -74,10 +76,9 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
         validation_scores = np.zeros(10)
 
         # training phase
+        net.train()
         for i, b in enumerate(utils.batch(train, batch_size)):
-            #X = np.array([j[0] for j in b])[:, :3, :, :] # alpha channelを取り除く
             X = np.array([j[0] for j in b])
-            #pdb.set_trace()
             y = np.array([j[1] for j in b])
             w = np.array([j[2] for j in b])
 
@@ -103,8 +104,8 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             w_flat = w.view(-1)
             weight = (w_flat.float() / 255.) * 4. + 1.
             #weight = (w_flat.float() / 255.) * 0. + 1.
-            loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
-            #loss2 = criterion(probs_flat, y_flat.float() / 255.)
+            #loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
+            loss = criterion(probs_flat, y_flat.float() / 255.)
             #print(np.isclose(loss.data[0], loss2.data[0]))
             train_loss += loss.data[0]
 
@@ -119,6 +120,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
         train_loss_list.append(train_loss/N_batch_per_epoch_train)
 
         # validation phase
+        net.eval()
         for i, b in enumerate(utils.batch(val, val_batch_size)):
             X = np.array([j[0] for j in b])[:, :3, :, :] # alpha channelを取り除く
             y = np.array([j[1] for j in b])
@@ -145,8 +147,8 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             # edgeに対して重み付けをする
             weight = (w_flat.float() / 255.) * 4. + 1.
             #weight = (w_flat.float() / 255.) * 0. + 1.
-            loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
-            #loss2 = criterion(probs_flat, y_flat.float() / 255.)
+            #loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
+            loss = criterion(probs_flat, y_flat.float() / 255.)
             #print(np.isclose(loss.data[0], loss2.data[0]))
             validation_loss += loss.data[0]
 
@@ -178,7 +180,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
 
         if cp and (epoch + 1) % 10 == 0:
             torch.save(net.state_dict(),
-                       dir_save + 'gray3_CP{}.pth'.format(epoch+1))
+                       dir_save + '4_CP{}.pth'.format(epoch+1))
 
             print('Checkpoint {} saved !'.format(epoch+1))
 
@@ -190,7 +192,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
         plt.title("Mean WBCELoss")
         plt.xlabel("epochs")
         plt.ylabel("loss")
-        plt.savefig("./results/loss.png")
+        plt.savefig("./results/loss4.png")
         plt.clf()
 
         # draw score graph
