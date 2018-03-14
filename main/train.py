@@ -24,15 +24,15 @@ from myloss import weighted_binary_cross_entropy
 from validation import validate
 
 SIZE = (640, 640)
+EXP_ID = 7
 
 def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=1, lr=0.1, val_percent=0.05, cp=True, gpu=False, calc_score=True):
     dir_img = data + '/images/'
-    #dir_img = data + '_gray/images/'
-    #dir_img = data + '_color/images/'
     dir_mask = data + '/masks/'
     dir_edge = data + '/edges/'
     dir_save = save
     ids = load.get_ids(dir_img)
+
     # trainとvalに分ける
     iddataset = utils.split_train_val(ids, val_percent)
 
@@ -69,7 +69,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
         print('Starting epoch {}/{}.'.format(epoch+1, epochs))
         train = load.get_imgs_and_masks(iddataset['train'], dir_img, dir_mask, dir_edge, SIZE)
         original_sizes = load.get_original_sizes(iddataset['val'], dir_img, '.png')
-        val = load.get_imgs_and_masks(iddataset['val'], dir_img, dir_mask, dir_edge, SIZE)
+        val = load.get_imgs_and_masks(iddataset['val'], dir_img, dir_mask, dir_edge, SIZE, train=False)
         train_loss = 0
         validation_loss = 0
         validation_score = 0
@@ -103,10 +103,8 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
             y_flat = y.view(-1)
             w_flat = w.view(-1)
             weight = (w_flat.float() / 255.) * 4. + 1.
-            #weight = (w_flat.float() / 255.) * 0. + 1.
             loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
             #loss = criterion(probs_flat, y_flat.float() / 255.)
-            #print(np.isclose(loss.data[0], loss2.data[0]))
             train_loss += loss.data[0]
 
             print('{0:.4f} --- loss: {1:.6f}'.format(i*batch_size/N_train,
@@ -146,10 +144,8 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
 
             # edgeに対して重み付けをする
             weight = (w_flat.float() / 255.) * 4. + 1.
-            #weight = (w_flat.float() / 255.) * 0. + 1.
             loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
             #loss = criterion(probs_flat, y_flat.float() / 255.)
-            #print(np.isclose(loss.data[0], loss2.data[0]))
             validation_loss += loss.data[0]
 
             y_hat = np.asarray((probs > 0.5).data)
@@ -180,7 +176,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
 
         if cp and (epoch + 1) % 10 == 0:
             torch.save(net.state_dict(),
-                       dir_save + '5_CP{}.pth'.format(epoch+1))
+                       dir_save + str(EXP_ID) + '_CP{}.pth'.format(epoch+1))
 
             print('Checkpoint {} saved !'.format(epoch+1))
 
@@ -192,7 +188,7 @@ def train_net(net, data, save, save_val, epochs=5, batch_size=2, val_batch_size=
         plt.title("Mean WBCELoss")
         plt.xlabel("epochs")
         plt.ylabel("loss")
-        plt.savefig("./results/loss5.png")
+        plt.savefig("./results/loss" + str(EXP_ID) + ".png")
         plt.clf()
 
         # draw score graph

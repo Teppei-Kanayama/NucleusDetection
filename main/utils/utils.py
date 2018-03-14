@@ -1,4 +1,5 @@
 import PIL
+from PIL import Image
 import numpy as np
 import random
 import matplotlib.pyplot as plt
@@ -31,13 +32,20 @@ def normalize(x):
 
 
 def data_augmentation(X, y, w):
+    # rotate
     k = np.random.randint(4)
-    is_flip = np.random.randint(2)
     X = np.rot90(X, k=k, axes=(2, 3)).copy()
     y = np.rot90(y, k=k, axes=(1, 2)).copy()
     w = np.rot90(y, k=k, axes=(1, 2)).copy()
+
+    # flip
+    is_flip = np.random.randint(2)
     if is_flip:
         X = np.flip(X, axis=2).copy()
         y = np.flip(y, axis=1).copy()
         w = np.flip(w, axis=1).copy()
+
+    # zoom
+    
+
     return X, y, w

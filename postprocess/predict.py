@@ -77,17 +77,17 @@ if __name__ == "__main__":
         print(image_type, "\n")
         if image_type == 1:
             out = predict_img(net, img, in_file, args.gpu, SIZE)
-            out = morphology(out, iterations=1)
+            out = morphology(out, iterations=0)
             result = Image.fromarray((out * 255).astype(numpy.uint8))
             result = result.resize((original_width, original_height))
         elif image_type == 2:
             out = predict_img(net, img, in_file, args.gpu, SIZE)
-            out = morphology(out, iterations=1)
+            out = morphology(out, iterations=0)
             result = Image.fromarray((out * 255).astype(numpy.uint8))
             result = result.resize((original_width, original_height))
         else:
             out = predict_img(net, img, in_file, args.gpu, SIZE)
-            out = morphology(out, iterations=1)
+            out = morphology(out, iterations=0)
             result = Image.fromarray((out * 255).astype(numpy.uint8))
             result = result.resize((original_width, original_height))
 
