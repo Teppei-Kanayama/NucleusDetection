@@ -79,7 +79,10 @@ def color_classification(r, g, b, img):
 
     else:
         #白背景の紫パターンで、これで捉えきれないものがあるので（ガバガバふぃるたー）
-        return 3
+        if maskedhist(img) == 5:
+            return 5
+        else:
+            return 3
 
 
 # In[ ]:
