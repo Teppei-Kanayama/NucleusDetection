@@ -6,7 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from enum import Enum
 
-DIFF_LIMIT = 0.10
+#DIFF_LIMIT = 0.10
+DIFF_LIMIT = 0.20
 
 class flag(Enum):#フラグ：くびれなし→0,くびれあり→1,検出しない→-1
     no_curve = 0
@@ -42,7 +43,7 @@ class Devide():#分割アルゴリズム
     __data = 0
     def __init__(self, org_img, org_mask):
         #画像格納
-        train_data = org_img
+        train_data = org_img[:, :, :3].copy()  # omit alpha channel
         train_data_gray = cv2.cvtColor(train_data, cv2.COLOR_RGB2GRAY)
         mask_data = org_mask
         mask_data = mask_data.copy()
@@ -120,11 +121,16 @@ class Devide():#分割アルゴリズム
         markers = cv2.watershed(train_data,markers)
 
         self.__data = markers
+
     def data(self):
         return self.__data
+
     def show(self):
         plt.imshow(self.__data)
         plt.show()
+
+    def make_mask(self):
+        return ((self.data() != 1) * (self.data() != -1) * 255).astype(np.uint8)
 
 
 def Search(num, outer_contours,all_contours_array,seeds):#輪郭内のくびれていない輪郭をseedに入れる関数
