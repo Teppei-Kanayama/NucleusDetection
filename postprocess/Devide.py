@@ -4,23 +4,16 @@ import glob
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-
-
-
-# In[24]:
-
-
 from enum import Enum
+
+DIFF_LIMIT = 0.10
+
 class flag(Enum):#フラグ：くびれなし→0,くびれあり→1,検出しない→-1
     no_curve = 0
     curve = 1
     no_detect = -1
 
 
-# In[25]:
-
-
-DIFF_LIMIT = 0.10
 def curve(contour):#くびれがあればTrue,なければFalseを返す関数
     con_t = cv2.contourArea(contour)#その輪郭の面積
     approx = cv2.convexHull(contour)
@@ -30,9 +23,6 @@ def curve(contour):#くびれがあればTrue,なければFalseを返す関数
             return True
         else:
             return False
-
-
-# In[26]:
 
 
 class Threshold:#train_data_grayに対して、明度x未満を0、x以上を255に二値化する
@@ -47,9 +37,6 @@ class Threshold:#train_data_grayに対して、明度x未満を0、x以上を255
         plt.show()
 
 
-# In[27]:
-
-
 #白地に黒の画像を想定。黒地に白だったら反転してください
 class Devide():#分割アルゴリズム
     __data = 0
@@ -57,7 +44,6 @@ class Devide():#分割アルゴリズム
         #画像格納
         train_data = org_img
         train_data_gray = cv2.cvtColor(train_data, cv2.COLOR_RGB2GRAY)
-        #mask_data = org_mask[:,:,0]
         mask_data = org_mask
         mask_data = mask_data.copy()
         #ヒストグラム正規化により差が出やすくする
@@ -108,7 +94,7 @@ class Devide():#分割アルゴリズム
                 seeds.append(contour_array[2])
         #255番からループスタート
         Search(255,first_outer_contours,all_contours_array,seeds)
-        
+
         img = np.copy(train_data)
         contour_img = cv2.drawContours(img, seeds, -1, (125,125,0), 1)
 
@@ -155,14 +141,14 @@ def Search(num, outer_contours,all_contours_array,seeds):#輪郭内のくびれ�
                     if contour_array[0] == flag.no_curve:#くびれていなければ
                         seeds.append(contour_array[2])#Seedsにその輪郭を追加
 
-                        Delete(num,contour_array[2],all_contours_array)#その輪郭内の下部輪郭の削除     
+                        Delete(num,contour_array[2],all_contours_array)#その輪郭内の下部輪郭の削除
 
     if num > 0:
         return Search(num-1,outer_contours,all_contours_array,seeds)
 
 
 
-def Delete(num,outer_contour): #この階層以下で、outer_contour内にあるやつ全部消去
+def Delete(num,outer_contour, all_contours_array): #この階層以下で、outer_contour内にあるやつ全部消去
     for i in range(0, num):#以下の階層において
         contours_array = all_contours_array[i]
         for j in range(len(contours_array)):#輪郭一つ一つに対して

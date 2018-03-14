@@ -27,9 +27,8 @@ def parse():
     parser.add_option('--save_val',
                       default='/data/unagi0/kanayama/dataset/nuclei_images/answer_val/',
                       help='path to save models')
-    parser.add_option('--calc_score', action='store_true'
-                      default=False,
-                      help='whether calculate score or not')
+    parser.add_option('--calc_score', action='store_true',
+                      default=False, help='whether calculate score or not')
 
     return parser.parse_args()
 
