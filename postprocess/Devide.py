@@ -1,14 +1,10 @@
-
 # coding: utf-8
-
-# In[23]:
-
-
 import os
 import glob
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+
 
 
 # In[24]:
@@ -61,7 +57,8 @@ class Devide():#分割アルゴリズム
         #画像格納
         train_data = org_img
         train_data_gray = cv2.cvtColor(train_data, cv2.COLOR_RGB2GRAY)
-        mask_data = org_mask[:,:,0]
+        #mask_data = org_mask[:,:,0]
+        mask_data = org_mask
         mask_data = mask_data.copy()
         #ヒストグラム正規化により差が出やすくする
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
@@ -78,7 +75,7 @@ class Devide():#分割アルゴリズム
             data = cv2.bitwise_and(inverse, inverse,mask=mask_data)#maskの輪郭外を消去
             datas.append(data)
         datas.append(mask_data)#最後にmaskを入れる
-        
+
         #輪郭配列を作る。
         all_contours_array = []#dataごとのcontoursが全て入っている
         for data in datas:
@@ -98,9 +95,9 @@ class Devide():#分割アルゴリズム
                     cy = 0
                 contours_array.append([curve_flag,[cx,cy],contour])
             all_contours_array.append(contours_array)
-        
+
         seeds = []#watershedアルゴリズムの前景となる輪郭を入れる配列
-        
+
         first_outer_contours = []
         #datas256番=mask_dataで輪郭を取得。くびれていなければseedsへ。くびれていたらfirst_outer_contoursへ。
         first_contours_array = all_contours_array[256]
@@ -135,7 +132,7 @@ class Devide():#分割アルゴリズム
         markers[unknown==255] = 0
         #watershedアルゴリズムを行う
         markers = cv2.watershed(train_data,markers)
-        
+
         self.__data = markers
     def data(self):
         return self.__data
@@ -144,14 +141,12 @@ class Devide():#分割アルゴリズム
         plt.show()
 
 
-# In[31]:
-
-
 def Search(num, outer_contours,all_contours_array,seeds):#輪郭内のくびれていない輪郭をseedに入れる関数
+
     contours_array = all_contours_array[num]#data[num]におけるcontours
-    
+
     for outer_contour in outer_contours:
-        
+
         #outer_contour内にiのmonentが存在する場合を検出する
         for i in range(len(contours_array)):#輪郭一つ一つに対して
             contour_array = contours_array[i]
@@ -159,15 +154,15 @@ def Search(num, outer_contours,all_contours_array,seeds):#輪郭内のくびれ�
                 if cv2.pointPolygonTest(outer_contour, tuple(contour_array[1]),False) == +1:#輪郭内なら
                     if contour_array[0] == flag.no_curve:#くびれていなければ
                         seeds.append(contour_array[2])#Seedsにその輪郭を追加
+
                         Delete(num,contour_array[2],all_contours_array)#その輪郭内の下部輪郭の削除     
+
     if num > 0:
         return Search(num-1,outer_contours,all_contours_array,seeds)
 
 
-# In[32]:
 
-
-def Delete(num,outer_contour,all_contours_array): #この階層以下で、outer_contour内にあるやつ全部消去
+def Delete(num,outer_contour): #この階層以下で、outer_contour内にあるやつ全部消去
     for i in range(0, num):#以下の階層において
         contours_array = all_contours_array[i]
         for j in range(len(contours_array)):#輪郭一つ一つに対して
@@ -175,4 +170,3 @@ def Delete(num,outer_contour,all_contours_array): #この階層以下で、outer
             if contour_array[0]!=flag.no_detect:#検出対象なら
                 if cv2.pointPolygonTest(outer_contour, tuple(contour_array[1]),False) == +1:#輪郭内なら
                     contour_array[0]=flag.no_detect#検出しないようにする
-
