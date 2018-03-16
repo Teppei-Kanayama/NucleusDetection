@@ -15,7 +15,7 @@ import random
 
 def get_ids(dir):
     """Returns a list of the ids in the directory"""
-    return [f.split(".")[0] for f in os.listdir(dir)]
+    return [f.split(".png")[0] for f in os.listdir(dir)]
 
 
 def split_ids(ids, n=2):
@@ -53,7 +53,8 @@ def get_imgs_and_masks(ids, dir_img, dir_mask, dir_edge, size, train=True):
     """Return all the couples (img, mask)"""
     # zoom
     if train:
-        is_zoom = np.random.randint(2)
+        #is_zoom = np.random.randint(2)
+        is_zoom = 0
     else:
         is_zoom = 0
     zoom_size_list = [320, 360, 400, 440, 480, 520, 560, 600]

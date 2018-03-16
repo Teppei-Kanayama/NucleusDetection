@@ -82,6 +82,9 @@ def train_net(options):
             y = np.array([j[1] for j in b])
             w = np.array([j[2] for j in b])
 
+            if X.shape[0] != options.batchsize:  # batch sizeを揃える（揃ってないとなぜかエラーになる）
+                continue
+
             X, y, w = utils.data_augmentation(X, y, w)
 
             X = torch.FloatTensor(X)

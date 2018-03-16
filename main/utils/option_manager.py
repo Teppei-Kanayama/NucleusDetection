@@ -5,9 +5,9 @@ def parse():
     parser = OptionParser()
     parser.add_option('--id', type='int',
                       help='ID of Experiment')
-    parser.add_option('--epochs', default=5, type='int',
+    parser.add_option('--epochs', default=300, type='int',
                       help='number of epochs')
-    parser.add_option('--batchsize', default=10,
+    parser.add_option('--batchsize', default=12,
                       type='int', help='batch size')
     parser.add_option('--val_batchsize', default=1,
                       type='int', help='validation batch size')

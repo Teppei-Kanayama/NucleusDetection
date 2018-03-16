@@ -6,8 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from enum import Enum
 
-#DIFF_LIMIT = 0.10
-DIFF_LIMIT = 0.20
+DIFF_LIMIT = 0.05
+#DIFF_LIMIT = 0.30
 
 class flag(Enum):#フラグ：くびれなし→0,くびれあり→1,検出しない→-1
     no_curve = 0
