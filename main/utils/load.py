@@ -59,7 +59,6 @@ def get_imgs_and_masks(ids, dir_img, dir_mask, dir_edge, size, train=True):
         is_zoom = 0
     zoom_size_list = [320, 360, 400, 440, 480, 520, 560, 600]
     zoom_size = random.choice(zoom_size_list)
-    print(is_zoom, zoom_size)
     pos = np.random.randint(size[0] - zoom_size, size=2)
 
     imgs = to_resized_imgs(ids, dir_img, '.png', size, is_zoom, zoom_size, pos)

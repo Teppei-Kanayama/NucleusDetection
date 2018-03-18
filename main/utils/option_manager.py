@@ -17,22 +17,29 @@ def parse():
                       type='float', help='learning rate')
     parser.add_option('--gpu', action='store_true',
                       default=False, help='use cuda')
-    parser.add_option('--load',
+    parser.add_option('--load_model',
                       default=False, help='load file model')
+    parser.add_option('--load_state',
+                      default=False, help='load file state')
     parser.add_option('--data',
                       default='/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_default', help='path to training data')
-    parser.add_option('--save',
+    parser.add_option('--save_model',
                       default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/',
                       help='path to save models')
+    parser.add_option('--save_state',
+                      default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/',
+                      help='path to save states')
     parser.add_option('--save_val',
-                      default='/data/unagi0/kanayama/dataset/nuclei_images/answer_val/',
+                      default='/data/unagi0/kanayama/dataset/nuclei_images/answer_val',
                       help='path to save models')
     parser.add_option('--calc_score', action='store_true',
                       default=False, help='whether calculate score or not')
     parser.add_option('--skip_train', action='store_true', default=False,
                       help='skip training phase')
-    parser.add_option('--save_probs', default=None,
-                      help='path to save probabilities in validation phase')
+    parser.add_option('--save_probs', action='store_true', default=False,
+                      help="save the probability of model's output")
+    parser.add_option('--resize_shape', default=(640, 640),
+                      help='the shape to resize image')
 
     return parser.parse_args()
 
@@ -47,4 +54,5 @@ def display_info(options, N_train, N_val):
     print('| Training size   : {}'.format(N_train))
     print('| Validation size : {}'.format(N_val))
     print('| Cuda   : {}'.format(options.gpu))
+    print('| Resize Shape   : {}'.format(options.resize_shape))
     print('+------------------------------+')

@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 
 from utils import load, utils, option_manager
+from utils.logger import Logger
 from unet import UNet
 from torch.autograd import Variable
 from torch import optim
@@ -22,60 +23,53 @@ from PIL import Image
 from myloss import weighted_binary_cross_entropy
 from validation import validate
 
-SIZE = (640, 640)
 
 def train_net(options):
-    data = options.data
-    dir_img = data + '/images/'
-    dir_mask = data + '/masks/'
-    dir_edge = data + '/edges/'
-    dir_save = options.save
+    dir_img = options.data + '/images/'
+    dir_mask = options.data + '/masks/'
+    dir_edge = options.data + '/edges/'
+    dir_save_model = options.save_model
+    dir_save_state = options.save_state
     ids = load.get_ids(dir_img)
 
-    # trainとvalに分ける
+    # trainとvalに分ける  # ここで順序も決まってしまう
     iddataset = utils.split_train_val(ids, options.val_percent)
     N_train = len(iddataset['train'])
     N_val = len(iddataset['val'])
     N_batch_per_epoch_train = int(N_train / options.batchsize)
     N_batch_per_epoch_val = int(N_val / options.val_batchsize)
 
+    # 実験条件の表示
     option_manager.display_info(options, N_train, N_val)
 
-    tmp = ""
-    for i in range(len(iddataset['val'])):
-        tmp += iddataset['val'][i] + "\n"
-    f = open(options.save_probs + 'valfiles.txt', 'w') # 書き込みモードで開く
-    f.write(tmp) # 引数の文字列をファイルに書き込む
-    f.close()
+    # 結果の記録用インスタンス
+    logger = Logger(options, iddataset)
+
+    #if options.save_probs is not None:
+    #    logger.save_val_filenames(iddataset)
 
     # モデルの定義
     net = UNet(3, 1)
 
+    # 最適化手法を定義
+    optimizer = optim.Adam(net.parameters())
+
     # 学習済みモデルをロードする
-    if options.load:
-        net.load_state_dict(torch.load(options.load))
-        print('Model loaded from {}'.format(options.load))
+    if options.load_model:
+        net.load_state_dict(torch.load(options.load_model))
+        optimizer.load_state_dict(torch.load(options.load_state))
+        print('Model loaded from {}'.format(options.load_model))
+        print('State loaded from {}'.format(options.load_state))
 
     if options.gpu:
         net.cuda()
 
-    # 最適化手法を定義
-    #optimizer = optim.SGD(net.parameters(),
-    #                      lr=lr, momentum=0.9, weight_decay=0.0005)
-    optimizer = optim.Adam(net.parameters())
-
     # 学習開始
-    train_loss_list = []
-    validation_loss_list = []
-    validation_score_matrix = np.zeros((options.epochs, 10))
-    validation_score_list = []
-
-
     for epoch in range(options.epochs):
         print('Starting epoch {}/{}.'.format(epoch+1, options.epochs))
-        train = load.get_imgs_and_masks(iddataset['train'], dir_img, dir_mask, dir_edge, SIZE)
+        train = load.get_imgs_and_masks(iddataset['train'], dir_img, dir_mask, dir_edge, options.resize_shape)
         original_sizes = load.get_original_sizes(iddataset['val'], dir_img, '.png')
-        val = load.get_imgs_and_masks(iddataset['val'], dir_img, dir_mask, dir_edge, SIZE, train=False)
+        val = load.get_imgs_and_masks(iddataset['val'], dir_img, dir_mask, dir_edge, options.resize_shape, train=False)
         train_loss = 0
         validation_loss = 0
         validation_score = 0
@@ -123,12 +117,14 @@ def train_net(options):
                 loss.backward()
                 optimizer.step()
 
+                break
+
             print('Epoch finished ! Loss: {}'.format(train_loss/N_batch_per_epoch_train))
-            train_loss_list.append(train_loss/N_batch_per_epoch_train)
+            logger.save_loss(train_loss/N_batch_per_epoch_train, phase="train")
 
         # validation phase
         net.eval()
-        probs_array = np.zeros((N_val, SIZE[0], SIZE[1]))
+        probs_array = np.zeros((N_val, options.resize_shape[0], options.resize_shape[1]))
         for i, b in enumerate(utils.batch(val, options.val_batchsize)):
             X = np.array([j[0] for j in b])[:, :3, :, :] # alpha channelを取り除く
             y = np.array([j[1] for j in b])
@@ -150,8 +146,7 @@ def train_net(options):
             probs = F.sigmoid(y_pred)
 
             # 予測値を記録しておく
-            #probs_list.append(probs.data[0][0])
-            probs_array[i] = np.array(probs.data[0][0])
+            #probs_array[i] = np.array(probs.data[0][0])
 
             probs_flat = probs.view(-1)
             y_flat = y.view(-1)
@@ -162,57 +157,49 @@ def train_net(options):
             loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
             validation_loss += loss.data[0]
 
-            #pdb.set_trace()
             y_hat = np.asarray((probs > 0.5).data)
             y_hat = y_hat.reshape((y_hat.shape[2], y_hat.shape[3]))
             y_truth = np.asarray(y.data)
 
+            """
             # calculate validatation score
             if options.calc_score and False:  # 初期はノイズが多くスコアリングに時間がかかるため
                 print("Image No.", i, "started.")
                 score, scores, _ = validate(y_hat, y_truth)
                 validation_score += score
                 validation_scores += scores
+            """
 
-            # save images
-            result = Image.fromarray((y_hat * 255).astype(np.uint8))
-            result = result.resize(original_sizes[i])
-            result.save(options.save_val + iddataset['val'][i] + ".png")
+            logger.save_output_mask(y_hat, original_sizes[i], iddataset['val'][i])
+            if options.save_probs is not None:
+                logger.save_output_prob(np.asarray(probs.data[0][0]), original_sizes[i], iddataset['val'][i])
+
+            break
 
         print('Val Loss: {}'.format(validation_loss / N_batch_per_epoch_val))
-        validation_loss_list.append(validation_loss / N_batch_per_epoch_val)
+        logger.save_loss(validation_loss / N_batch_per_epoch_val, phase="val")
 
+        """
         if options.calc_score:
             print('score: {}'.format(validation_score / i))
             validation_score_matrix[epoch] = validation_scores / i
             validation_score_list.append(validation_score / i)
         else:
             validation_score_list.append(0.0)
+        """
 
+        # modelとoptimizerの状態を保存する。
         if (epoch + 1) % 10 == 0:
             torch.save(net.state_dict(),
-                       dir_save + str(options.id) + '_CP{}.pth'.format(epoch+1))
+                       dir_save_model + str(options.id) + '_CP{}.model'.format(epoch+1))
+            torch.save(optimizer.state_dict(),
+                       dir_save_state + str(options.id) + '_CP{}.state'.format(epoch+1))
 
             print('Checkpoint {} saved !'.format(epoch+1))
 
-        if options.save_probs is not None:
-            save_path = options.save_probs + str(options.id) + "/"
-            if not os.path.exists(save_path):
-                os.makedirs(save_path)
-            np.save(save_path + "probs.npy", probs_array)
+        logger.draw_loss_graph("./results/loss")
 
-
-        epoch_arange = np.arange(1, epoch + 2)
-        # draw loss graph
-        plt.plot(epoch_arange, train_loss_list, label="train loss")
-        plt.plot(epoch_arange, validation_loss_list, label="val loss")
-        plt.legend() # 凡例を表示
-        plt.title("Mean WBCELoss")
-        plt.xlabel("epochs")
-        plt.ylabel("loss")
-        plt.savefig("./results/loss" + str(options.id) + ".png")
-        plt.clf()
-
+        """
         # draw score graph
         if options.calc_score:
             plt.plot(epoch_arange, validation_score_list, label="Mean", linewidth=4)
@@ -221,16 +208,16 @@ def train_net(options):
             for i, thresh in enumerate(threshold):
                 plt.plot(epoch_arange, validation_score_matrix[:epoch+1, i], label=str(thresh))
 
-            plt.legend() # 凡例を表示
+            plt.legend()  # 凡例を表示
             plt.title("Average Precision")
             plt.xlabel("epochs")
             plt.ylabel("score")
             plt.savefig("./results/score.png")
             plt.clf()
-
+        """
 
 if __name__ == '__main__':
     (options, args) = option_manager.parse()
 
-    #学習を実行
+    # 学習を実行
     train_net(options)
