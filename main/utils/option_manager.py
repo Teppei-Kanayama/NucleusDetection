@@ -3,7 +3,7 @@ from optparse import OptionParser
 
 def parse():
     parser = OptionParser()
-    parser.add_option('--id', type='int',
+    parser.add_option('--id', type='int', default=0,
                       help='ID of Experiment')
     parser.add_option('--epochs', default=300, type='int',
                       help='number of epochs')
@@ -29,6 +29,10 @@ def parse():
                       help='path to save models')
     parser.add_option('--calc_score', action='store_true',
                       default=False, help='whether calculate score or not')
+    parser.add_option('--skip_train', action='store_true', default=False,
+                      help='skip training phase')
+    parser.add_option('--save_probs', default=None,
+                      help='path to save probabilities in validation phase')
 
     return parser.parse_args()
 

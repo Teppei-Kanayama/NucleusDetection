@@ -41,6 +41,12 @@ def train_net(options):
 
     option_manager.display_info(options, N_train, N_val)
 
+    tmp = ""
+    for i in range(len(iddataset['val'])):
+        tmp += iddataset['val'][i] + "\n"
+    f = open(options.save_probs + 'valfiles.txt', 'w') # 書き込みモードで開く
+    f.write(tmp) # 引数の文字列をファイルに書き込む
+    f.close()
 
     # モデルの定義
     net = UNet(3, 1)
@@ -76,51 +82,53 @@ def train_net(options):
         validation_scores = np.zeros(10)
 
         # training phase
-        net.train()
-        for i, b in enumerate(utils.batch(train, options.batchsize)):
-            X = np.array([j[0] for j in b])
-            y = np.array([j[1] for j in b])
-            w = np.array([j[2] for j in b])
+        if not options.skip_train:
+            net.train()
+            for i, b in enumerate(utils.batch(train, options.batchsize)):
+                X = np.array([j[0] for j in b])
+                y = np.array([j[1] for j in b])
+                w = np.array([j[2] for j in b])
 
-            if X.shape[0] != options.batchsize:  # batch sizeを揃える（揃ってないとなぜかエラーになる）
-                continue
+                if X.shape[0] != options.batchsize:  # batch sizeを揃える（揃ってないとなぜかエラーになる）
+                    continue
 
-            X, y, w = utils.data_augmentation(X, y, w)
+                X, y, w = utils.data_augmentation(X, y, w)
 
-            X = torch.FloatTensor(X)
-            y = torch.ByteTensor(y)
-            w = torch.ByteTensor(w)
+                X = torch.FloatTensor(X)
+                y = torch.ByteTensor(y)
+                w = torch.ByteTensor(w)
 
-            if options.gpu:
-                X = X.cuda()
-                y = y.cuda()
-                w = w.cuda()
+                if options.gpu:
+                    X = X.cuda()
+                    y = y.cuda()
+                    w = w.cuda()
 
-            X = Variable(X)
-            y = Variable(y)
-            w = Variable(w)
+                X = Variable(X)
+                y = Variable(y)
+                w = Variable(w)
 
-            y_pred = net(X)
-            probs = F.sigmoid(y_pred)
-            probs_flat = probs.view(-1)
-            y_flat = y.view(-1)
-            w_flat = w.view(-1)
-            weight = (w_flat.float() / 255.) * 4. + 1.
-            loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
-            train_loss += loss.data[0]
+                y_pred = net(X)
+                probs = F.sigmoid(y_pred)
+                probs_flat = probs.view(-1)
+                y_flat = y.view(-1)
+                w_flat = w.view(-1)
+                weight = (w_flat.float() / 255.) * 4. + 1.
+                loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
+                train_loss += loss.data[0]
 
-            print('{0:.4f} --- loss: {1:.6f}'.format(i*options.batchsize/N_train,
-                                                     loss.data[0]))
+                print('{0:.4f} --- loss: {1:.6f}'.format(i*options.batchsize/N_train,
+                                                         loss.data[0]))
 
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
 
-        print('Epoch finished ! Loss: {}'.format(train_loss/N_batch_per_epoch_train))
-        train_loss_list.append(train_loss/N_batch_per_epoch_train)
+            print('Epoch finished ! Loss: {}'.format(train_loss/N_batch_per_epoch_train))
+            train_loss_list.append(train_loss/N_batch_per_epoch_train)
 
         # validation phase
         net.eval()
+        probs_array = np.zeros((N_val, SIZE[0], SIZE[1]))
         for i, b in enumerate(utils.batch(val, options.val_batchsize)):
             X = np.array([j[0] for j in b])[:, :3, :, :] # alpha channelを取り除く
             y = np.array([j[1] for j in b])
@@ -140,6 +148,11 @@ def train_net(options):
 
             y_pred = net(X)
             probs = F.sigmoid(y_pred)
+
+            # 予測値を記録しておく
+            #probs_list.append(probs.data[0][0])
+            probs_array[i] = np.array(probs.data[0][0])
+
             probs_flat = probs.view(-1)
             y_flat = y.view(-1)
             w_flat = w.view(-1)
@@ -149,6 +162,7 @@ def train_net(options):
             loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
             validation_loss += loss.data[0]
 
+            #pdb.set_trace()
             y_hat = np.asarray((probs > 0.5).data)
             y_hat = y_hat.reshape((y_hat.shape[2], y_hat.shape[3]))
             y_truth = np.asarray(y.data)
@@ -180,6 +194,13 @@ def train_net(options):
                        dir_save + str(options.id) + '_CP{}.pth'.format(epoch+1))
 
             print('Checkpoint {} saved !'.format(epoch+1))
+
+        if options.save_probs is not None:
+            save_path = options.save_probs + str(options.id) + "/"
+            if not os.path.exists(save_path):
+                os.makedirs(save_path)
+            np.save(save_path + "probs.npy", probs_array)
+
 
         epoch_arange = np.arange(1, epoch + 2)
         # draw loss graph

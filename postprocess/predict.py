@@ -26,7 +26,7 @@ SIZE = (640, 640)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m',
-                        default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/11_CP400.pth',
+                        default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/12_CP600.pth',
                         metavar='FILE',
                         help="Specify the file in which is stored the model")
     parser.add_argument('--gpu', '-g', action='store_true',
@@ -73,18 +73,17 @@ if __name__ == "__main__":
         resized_img_array = np.array(resized_img)
 
         print(image_type, "\n")
-        if image_type == 1 or True:
-            dst_img_array = predict_img(net, resized_img_array, args.gpu)
-            dst_img_array = morphology(dst_img_array, iterations=2)
+        dst_img_array = predict_img(net, resized_img_array, args.gpu)
+        dst_img_array = morphology(dst_img_array, iterations=1)
 
-            dst_img = Image.fromarray(dst_img_array * 255)
-            dst_img_resized = dst_img.resize((original_width, original_height))
-            print(original_width, original_height)
-            #dst_img_resized_array = np.asarray(dst_img_resized)
+        dst_img = Image.fromarray(dst_img_array * 255)
+        dst_img_resized = dst_img.resize((original_width, original_height))
+        print(original_width, original_height)
+        #dst_img_resized_array = np.asarray(dst_img_resized)
 
-            #devide = Devide(original_img_array, dst_img_resized_array)
-            #out = devide.make_mask()
-            #result = Image.fromarray((out).astype(numpy.uint8))
-            result = dst_img_resized
+        #devide = Devide(original_img_array, dst_img_resized_array)
+        #out = devide.make_mask()
+        #result = Image.fromarray((out).astype(numpy.uint8))
+        result = dst_img_resized
 
         result.save(out_file)

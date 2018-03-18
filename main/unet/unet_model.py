@@ -7,15 +7,15 @@ import pdb
 
 class DoubleConv(nn.Module):
     '''(conv => BN => ReLU) * 2'''
-    def __init__(self, in_ch, out_ch):
+    def __init__(self, in_ch, out_ch, drop_rate):
         super(DoubleConv, self).__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(in_ch, out_ch, 3, padding=1),
             nn.ReLU(inplace=True),
-            nn.Dropout(0.1),
+            nn.Dropout(drop_rate),
             nn.Conv2d(out_ch, out_ch, 3, padding=1),
             nn.ReLU(inplace=True),
-            nn.Dropout(0.1)
+            #nn.Dropout(drop_rate)
         )
 
     def forward(self, x):
@@ -24,9 +24,9 @@ class DoubleConv(nn.Module):
 
 
 class InConv(nn.Module):
-    def __init__(self, in_ch, out_ch):
+    def __init__(self, in_ch, out_ch, drop_rate):
         super(InConv, self).__init__()
-        self.conv = DoubleConv(in_ch, out_ch)
+        self.conv = DoubleConv(in_ch, out_ch, drop_rate)
 
     def forward(self, x):
         x = self.conv(x)
@@ -34,11 +34,11 @@ class InConv(nn.Module):
 
 
 class Down(nn.Module):
-    def __init__(self, in_ch, out_ch):
+    def __init__(self, in_ch, out_ch, drop_rate):
         super(Down, self).__init__()
         self.mpconv = nn.Sequential(
             nn.MaxPool2d(2),
-            DoubleConv(in_ch, out_ch)
+            DoubleConv(in_ch, out_ch, drop_rate)
         )
 
     def forward(self, x):
@@ -47,10 +47,10 @@ class Down(nn.Module):
 
 
 class Up(nn.Module):
-    def __init__(self, in_ch, out_ch, bilinear=True):
+    def __init__(self, in_ch, out_ch, drop_rate):
         super(Up, self).__init__()
         self.up = nn.ConvTranspose2d(in_ch, out_ch, 2, stride=2)
-        self.conv = DoubleConv(in_ch, out_ch)
+        self.conv = DoubleConv(in_ch, out_ch, drop_rate)
 
     def forward(self, x1, x2):
         x1 = self.up(x1)
@@ -76,15 +76,15 @@ class OutConv(nn.Module):
 class UNet(nn.Module):
     def __init__(self, n_channels, n_classes):
         super(UNet, self).__init__()
-        self.inc = InConv(n_channels, 16)
-        self.down1 = Down(16, 32)
-        self.down2 = Down(32, 64)
-        self.down3 = Down(64, 128)
-        self.down4 = Down(128, 256)
-        self.up1 = Up(256, 128)
-        self.up2 = Up(128, 64)
-        self.up3 = Up(64, 32)
-        self.up4 = Up(32, 16)
+        self.inc = InConv(n_channels, 16, 0.1)
+        self.down1 = Down(16, 32, 0.1)
+        self.down2 = Down(32, 64, 0.2)
+        self.down3 = Down(64, 128, 0.2)
+        self.down4 = Down(128, 256, 0.3)
+        self.up1 = Up(256, 128, 0.2)
+        self.up2 = Up(128, 64, 0.2)
+        self.up3 = Up(64, 32, 0.1)
+        self.up4 = Up(32, 16, 0.1)
         self.outc = OutConv(16, n_classes)
 
 
