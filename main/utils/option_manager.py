@@ -32,7 +32,7 @@ def parse():
     parser.add_option('--save_val',
                       default='/data/unagi0/kanayama/dataset/nuclei_images/answer_val',
                       help='path to save models')
-    parser.add_option('--calc_score', action='store_true',
+    parser.add_option('--skip_calc_score', action='store_true',
                       default=False, help='whether calculate score or not')
     parser.add_option('--skip_train', action='store_true', default=False,
                       help='skip training phase')
@@ -40,6 +40,9 @@ def parse():
                       help="save the probability of model's output")
     parser.add_option('--resize_shape', default=(640, 640),
                       help='the shape to resize image')
+    parser.add_option('--calc_score_step', default=5,
+                      help='interval to calculate score')
+
 
     return parser.parse_args()
 
