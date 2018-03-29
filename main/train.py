@@ -34,7 +34,10 @@ def train_net(options):
     ids = load.get_ids(dir_img)
 
     # trainとvalに分ける  # ここで順序も決まってしまう
-    iddataset = utils.split_train_val(ids, options.val_percent)
+    #iddataset = utils.split_train_val(ids, options.val_percent)
+    iddataset = {}
+    iddataset["train"] = list(map(lambda x: x.split(".png")[0], os.listdir("/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_splited/train_default/")))
+    iddataset["val"] = list(map(lambda x: x.split(".png")[0], os.listdir("/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_splited/val_default/")))
     N_train = len(iddataset['train'])
     N_val = len(iddataset['val'])
     N_batch_per_epoch_train = int(N_train / options.batchsize)

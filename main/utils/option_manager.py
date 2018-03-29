@@ -38,7 +38,7 @@ def parse():
                       help='skip training phase')
     parser.add_option('--save_probs', action='store_true', default=False,
                       help="save the probability of model's output")
-    parser.add_option('--resize_shape', default=(640, 640),
+    parser.add_option('--resize_shape', default=(256, 256),
                       help='the shape to resize image')
     parser.add_option('--calc_score_step', default=5,
                       help='interval to calculate score')
