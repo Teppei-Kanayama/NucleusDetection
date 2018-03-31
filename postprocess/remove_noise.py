@@ -5,8 +5,9 @@ import matplotlib
 
 # raw: 生データ, th: 核として検出する確率値, shape: 元画像の大きさ(height, width), area: 閾値, prob: 閾値
 # 面積が11未満の核または、面積がarea未満でかつ核の平均確率がprob未満のものを除去する
-def remove_noise(raw, shape, th, area, prob):
+def remove_noise(raw, shape, th=0.5, area=30, prob=0.8):
     # resize raw
+    """
     height = shape[0]
     width = shape[1]
     if height > width:
@@ -17,7 +18,9 @@ def remove_noise(raw, shape, th, area, prob):
         resized_height = int(height * 640 / width + 0.5)
         n = int((640 - resized_height) / 2)
         resized_raw = raw[n:n+resized_height, ::]
-    
+    """
+    resized_raw = raw
+
     # binarization
     bin = np.where(resized_raw > th, 1, 0)
 
@@ -32,8 +35,8 @@ def remove_noise(raw, shape, th, area, prob):
     probs = np.array([np.sum(resized_raw * bin) / np.sum(bin) for bin in bin_individual])
 
     # resize
-    bin_individual = bin_individual.astype("uint8")
-    bin_individual = np.array([cv2.resize(bin, shape) for bin in bin_individual])
+    #bin_individual = bin_individual.astype("uint8")
+    #bin_individual = np.array([cv2.resize(bin, shape) for bin in bin_individual])
 
     # remove noise
     output = np.zeros(shape, dtype = "uint8")

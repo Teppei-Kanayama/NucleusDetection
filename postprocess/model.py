@@ -24,6 +24,9 @@ def predict_img(net, img, gpu):
         X = X.cuda()
 
     y_hat = F.sigmoid(net(X))
-    y_hat = np.asarray((y_hat > 0.5).data)
+    y_hat = np.asarray(y_hat.data)
     y_hat = y_hat.reshape((y_hat.shape[2], y_hat.shape[3]))
     return y_hat
+    #y_hat = np.asarray((y_hat > 0.5).data)
+    #y_hat = y_hat.reshape((y_hat.shape[2], y_hat.shape[3]))
+    #return y_hat

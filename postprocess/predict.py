@@ -76,16 +76,16 @@ if __name__ == "__main__":
         # 所定の大きさにresize
         resized_img = to_square(original_img, args.size)
 
-        # U-Netを用いてsegentation
-        dst_img = predict_img(net, resized_img, args.gpu)
-
-        # 後処理
-        #dst_img_array = morphology(dst_img_array, iterations=1)
-        dst_img = (dst_img * 255).astype(np.uint8)
+        # U-Netを用いてsegentation（確率値を出力）
+        probs = predict_img(net, resized_img, args.gpu)
 
         # もとの大きさに戻す
-        dst_img_resized = from_square(dst_img, (original_height, original_width))
+        probs_resized = from_square(probs, (original_height, original_width))
+
+        # ノイズ除去 & 二値化
+        dst_img = remove_noise(probs_resized, (original_height, original_width))
+        dst_img = (dst_img * 255).astype(np.uint8)
 
         # 結果を画像として保存
-        result = Image.fromarray(dst_img_resized)
+        result = Image.fromarray(dst_img)
         result.save(out_file)
