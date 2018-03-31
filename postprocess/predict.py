@@ -20,13 +20,14 @@ sys.path.append("../preprocess")
 from imagetype_classification import imagetype_classification
 
 from morphology import morphology
+from resize import resize
+from remove_noise import remove_noise
 
-SIZE = (640, 640)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m',
-                        default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/13_CP300.model',
+                        default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/5_CP300.pth',
                         metavar='FILE',
                         help="Specify the file in which is stored the model")
     parser.add_argument('--gpu', '-g', action='store_true',
@@ -38,6 +39,8 @@ if __name__ == "__main__":
     parser.add_argument('--save', '-s',
                         help="path to save directory for output masks",
                         default="/data/unagi0/kanayama/dataset/nuclei_images/answer/")
+    parser.add_argument('--size',
+                        help="the size when input U-Net", default=640)
 
     args = parser.parse_args()
     print("Using model file : {}".format(args.model))
@@ -61,28 +64,27 @@ if __name__ == "__main__":
 
         print("\nPredicting image {} ...".format(in_file))
         original_img = Image.open(in_file)
+
+        # 元画像の大きさを保存しておく
         original_width = original_img.size[0]
         original_height =  original_img.size[1]
-        original_img_array = np.asarray(original_img)
+        original_img = np.asarray(original_img)
 
         # 染色方法を識別
-        image_type = imagetype_classification(in_file)
+        # image_type = imagetype_classification(in_file)
 
-        resized_img = original_img.resize(SIZE)
-        #resized_img = original_img
-        resized_img_array = np.array(resized_img)
+        # 所定の大きさにresize
+        resized_img = resize(original_img, args.size)
 
-        print(image_type, "\n")
-        dst_img_array = predict_img(net, resized_img_array, args.gpu)
-        dst_img_array = morphology(dst_img_array, iterations=1)
+        # U-Netを用いてsegentation
+        dst_img = predict_img(net, resized_img, args.gpu)
 
-        dst_img = Image.fromarray(dst_img_array * 255)
-        dst_img_resized = dst_img.resize((original_width, original_height))
-        #dst_img_resized_array = np.asarray(dst_img_resized)
+        # 後処理
+        #dst_img_array = morphology(dst_img_array, iterations=1)
 
-        #devide = Devide(original_img_array, dst_img_resized_array)
-        #out = devide.make_mask()
-        #result = Image.fromarray((out).astype(numpy.uint8))
-        result = dst_img_resized
+        # もとの大きさに戻す
+        dst_img_resized = (dst_img * 255).astype(np.uint8)
 
+        # 結果を画像として保存
+        result = Image.fromarray(dst_img_resized)
         result.save(out_file)
