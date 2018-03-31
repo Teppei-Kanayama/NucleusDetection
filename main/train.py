@@ -34,7 +34,6 @@ def train_net(options):
     ids = load.get_ids(dir_img)
 
     # trainとvalに分ける  # ここで順序も決まってしまう
-    #iddataset = utils.split_train_val(ids, options.val_percent)
     iddataset = {}
     iddataset["train"] = list(map(lambda x: x.split(".png")[0], os.listdir("/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_splited/train_default/")))
     iddataset["val"] = list(map(lambda x: x.split(".png")[0], os.listdir("/data/unagi0/kanayama/dataset/nuclei_images/stage1_train_splited/val_default/")))
@@ -159,10 +158,10 @@ def train_net(options):
             loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
             validation_loss += loss.data[0]
 
+            # 後処理
             y_hat = np.asarray((probs > 0.5).data)
             y_hat = y_hat.reshape((y_hat.shape[2], y_hat.shape[3]))
             y_truth = np.asarray(y.data)
-
 
             # calculate validatation score
             if (options.calc_score_step != 0) and (epoch + 1) % options.calc_score_step == 0:

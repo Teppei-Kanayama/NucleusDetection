@@ -26,7 +26,7 @@ SIZE = (640, 640)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m',
-                        default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/12_CP600.pth',
+                        default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/13_CP300.model',
                         metavar='FILE',
                         help="Specify the file in which is stored the model")
     parser.add_argument('--gpu', '-g', action='store_true',
@@ -78,7 +78,6 @@ if __name__ == "__main__":
 
         dst_img = Image.fromarray(dst_img_array * 255)
         dst_img_resized = dst_img.resize((original_width, original_height))
-        print(original_width, original_height)
         #dst_img_resized_array = np.asarray(dst_img_resized)
 
         #devide = Devide(original_img_array, dst_img_resized_array)
