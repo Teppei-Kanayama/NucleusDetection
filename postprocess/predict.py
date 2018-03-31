@@ -20,7 +20,7 @@ sys.path.append("../preprocess")
 from imagetype_classification import imagetype_classification
 
 from morphology import morphology
-from resize import resize
+from resize import to_square, from_square
 from remove_noise import remove_noise
 
 
@@ -74,16 +74,17 @@ if __name__ == "__main__":
         # image_type = imagetype_classification(in_file)
 
         # 所定の大きさにresize
-        resized_img = resize(original_img, args.size)
+        resized_img = to_square(original_img, args.size)
 
         # U-Netを用いてsegentation
         dst_img = predict_img(net, resized_img, args.gpu)
 
         # 後処理
         #dst_img_array = morphology(dst_img_array, iterations=1)
+        dst_img = (dst_img * 255).astype(np.uint8)
 
         # もとの大きさに戻す
-        dst_img_resized = (dst_img * 255).astype(np.uint8)
+        dst_img_resized = from_square(dst_img, (original_height, original_width))
 
         # 結果を画像として保存
         result = Image.fromarray(dst_img_resized)

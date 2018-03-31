@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
 
-def resize(image, size=640):
+
+def to_square(image, size=640):
     height = image.shape[0]
     width = image.shape[1]
     channels = image.shape[2]
@@ -34,3 +35,22 @@ def resize(image, size=640):
         output = cv2.resize(image, (size, size), interpolation = cv2.INTER_NEAREST)
 
     return output
+
+
+def from_square(image, shape):
+    height = shape[0]
+    width = shape[1]
+    size = image.shape[1]
+
+    if height >= width:
+        resized_width = int(width * size / height + 0.5)
+        n = int((size - resized_width) / 2)
+        resized_image = image[::, n:n + resized_width]
+    elif height < width:
+        resized_height = int(height * size / width + 0.5)
+        n = int((size - resized_height) / 2)
+        resized_image = image[n:n+resized_height, ::]
+
+    resized_image = cv2.resize(resized_image, (width, height))
+
+    return resized_image
