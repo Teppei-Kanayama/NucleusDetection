@@ -27,7 +27,7 @@ from remove_noise import remove_noise
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m',
-                        default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/5_CP300.pth',
+                        default='/data/unagi0/kanayama/dataset/nuclei_images/checkpoints/14_CP300.model',
                         metavar='FILE',
                         help="Specify the file in which is stored the model")
     parser.add_argument('--gpu', '-g', action='store_true',
