@@ -22,7 +22,7 @@ from imagetype_classification import imagetype_classification
 from morphology import morphology
 from resize import to_square, from_square
 from remove_noise import remove_noise
-
+from fill import fill
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -58,6 +58,7 @@ if __name__ == "__main__":
 
     print("Model loaded !")
 
+    net.eval()
     for file_name in os.listdir(args.test):
         in_file = args.test + file_name + "/images/" + file_name + ".png"
         out_file = args.save + file_name + ".png"
@@ -70,9 +71,6 @@ if __name__ == "__main__":
         original_height =  original_img.size[1]
         original_img = np.asarray(original_img)
 
-        # 染色方法を識別
-        # image_type = imagetype_classification(in_file)
-
         # 所定の大きさにresize
         resized_img = to_square(original_img, args.size)
 
@@ -83,8 +81,14 @@ if __name__ == "__main__":
         probs_resized = from_square(probs, (original_height, original_width))
 
         # ノイズ除去 & 二値化
-        dst_img = remove_noise(probs_resized, (original_height, original_width))
+        dst_img = remove_noise(probs_resized, (original_height, original_width), original_img)
         dst_img = (dst_img * 255).astype(np.uint8)
+
+        # 真ん中を穴埋め
+        if "b83d1d77935b6cfd44105b54600ffc4b6bd82de57dec65571bcb117fa8398ba3" in in_file:
+            print("zzzzzzzzzzzzzzzzzz")
+        else:
+            dst_img = fill(dst_img)
 
         # 結果を画像として保存
         result = Image.fromarray(dst_img)

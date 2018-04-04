@@ -30,11 +30,19 @@ def to_resized_imgs(ids, dir, suffix, size, perm, drop_alpha=True):
         im = Image.open(dir + ids[i] + suffix)
         original_sizes.append(im.size)
         im = im.resize(size) #ここでリサイズする
-
+        #print(ids[i])
         if drop_alpha:
-            yield np.asarray(im)[:, :, :3] #alpha channelを落とす
+            try:
+                yield np.asarray(im)[:, :, :3] #alpha channelを落とす
+            except IndexError:
+                im = np.asarray(im)
+                yield np.broadcast_to(im[:, :, np.newaxis], (im.shape[0], im.shape[1], 3))
+
         else:
-            yield np.asarray(im)
+            try:
+                yield np.asarray(im)[:, :, 0]
+            except IndexError:
+                yield np.asarray(im)
 
 
 def get_original_sizes(ids, dir, suffix):

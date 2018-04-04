@@ -23,7 +23,6 @@ from PIL import Image
 from myloss import weighted_binary_cross_entropy
 from validation import validate
 
-step=5
 
 def train_net(options):
     dir_img = options.data + '/images/'
@@ -49,7 +48,7 @@ def train_net(options):
     logger = Logger(options, iddataset)
 
     # モデルの定義
-    net = UNet(3, 1)
+    net = UNet(3, 1, options.drop_rate1, options.drop_rate2, options.drop_rate3)
 
     # 学習済みモデルをロードする
     if options.load_model:
@@ -111,7 +110,7 @@ def train_net(options):
                 probs_flat = probs.view(-1)
                 y_flat = y.view(-1)
                 w_flat = w.view(-1)
-                weight = (w_flat.float() / 255.) * 4. + 1.
+                weight = (w_flat.float() / 255.) * (options.weight - 1) + 1.
                 loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
                 train_loss += loss.data[0]
 
@@ -154,7 +153,7 @@ def train_net(options):
             w_flat = w.view(-1)
 
             # edgeに対して重み付けをする
-            weight = (w_flat.float() / 255.) * 4. + 1.
+            weight = (w_flat.float() / 255.) * (options.weight - 1) + 1.
             loss = weighted_binary_cross_entropy(probs_flat, y_flat.float() / 255., weight)
             validation_loss += loss.data[0]
 
@@ -162,6 +161,10 @@ def train_net(options):
             y_hat = np.asarray((probs > 0.5).data)
             y_hat = y_hat.reshape((y_hat.shape[2], y_hat.shape[3]))
             y_truth = np.asarray(y.data)
+
+            # ノイズ除去 & 二値化
+            #dst_img = remove_noise(probs_resized, (original_height, original_width))
+            #dst_img = (dst_img * 255).astype(np.uint8)
 
             # calculate validatation score
             if (options.calc_score_step != 0) and (epoch + 1) % options.calc_score_step == 0:
@@ -194,7 +197,7 @@ def train_net(options):
         logger.draw_loss_graph("./results/loss")
         # draw score graph
         if (options.calc_score_step != 0) and (epoch + 1) % options.calc_score_step == 0:
-            logger.draw_score_graph("./results/score.png")
+            logger.draw_score_graph("./results/score" + str(options.id) + ".png")
 
 
 if __name__ == '__main__':

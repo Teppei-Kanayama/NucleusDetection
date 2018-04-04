@@ -74,17 +74,17 @@ class OutConv(nn.Module):
 
 # UNet本体
 class UNet(nn.Module):
-    def __init__(self, n_channels, n_classes):
+    def __init__(self, n_channels, n_classes, drop_rate1=0.1, drop_rate2=0.2, drop_rate3=0.3):
         super(UNet, self).__init__()
-        self.inc = InConv(n_channels, 16, 0.1)
-        self.down1 = Down(16, 32, 0.1)
-        self.down2 = Down(32, 64, 0.2)
-        self.down3 = Down(64, 128, 0.2)
-        self.down4 = Down(128, 256, 0.3)
-        self.up1 = Up(256, 128, 0.2)
-        self.up2 = Up(128, 64, 0.2)
-        self.up3 = Up(64, 32, 0.1)
-        self.up4 = Up(32, 16, 0.1)
+        self.inc = InConv(n_channels, 16, drop_rate1)
+        self.down1 = Down(16, 32, drop_rate1)
+        self.down2 = Down(32, 64, drop_rate2)
+        self.down3 = Down(64, 128, drop_rate2)
+        self.down4 = Down(128, 256, drop_rate3)
+        self.up1 = Up(256, 128, drop_rate2)
+        self.up2 = Up(128, 64, drop_rate2)
+        self.up3 = Up(64, 32, drop_rate1)
+        self.up4 = Up(32, 16, drop_rate1)
         self.outc = OutConv(16, n_classes)
 
 

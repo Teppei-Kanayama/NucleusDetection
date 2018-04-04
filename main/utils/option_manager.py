@@ -42,6 +42,14 @@ def parse():
                       help='the shape to resize image')
     parser.add_option('--calc_score_step', default=5,
                       help='interval to calculate score')
+    parser.add_option('--weight', default=5, type=int,
+                      help='weight for edge')
+    parser.add_option('--drop_rate1', default=0.1, type=float,
+                      help='rate of dropout')
+    parser.add_option('--drop_rate2', default=0.2, type=float,
+                      help='rate of dropout')
+    parser.add_option('--drop_rate3', default=0.3, type=float,
+                      help='rate of dropout')
 
 
     return parser.parse_args()
